@@ -2,6 +2,9 @@ import os
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
+from fpdf import FPDF
+import pdf_creator as pdfc
+
 
 
 class Auswertung:
@@ -43,6 +46,11 @@ class Auswertung:
         file_name = file.split("/")[-1]
         path = f"{self.filepath}/{self.output_dir}/{file_name}"
         fig.savefig(path)
+        file_name_extracted = file_name.split(".")[0]
+
+        pdf_file_path = f"{self.filepath}/{self.output_dir}/{file_name_extracted}.pdf"
+        pdfc.create_pdf(path, pdf_file_path, file_name_extracted)
+
 
     async def plot_save_v(self, file, array_x, array_y, array2_y, title):
         fig, ax = plt.subplots(figsize=(9, 6))
