@@ -78,7 +78,7 @@ class Auswertung:
     #self.plot_save_v(f"{syspath}/{file}", Voltage_Array, Current_Array, opPower_Array, title)
     async def plot_save_avg_v(self, file, array_x, array_y, array2_y, title):
 
-        fig, ax = plt.subplots(figsize=(9, 6))
+        fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
 
 
@@ -110,12 +110,16 @@ class Auswertung:
         for idx in range(0, len(array2_y[0])):
             for o_pow in range(0, len(array2_y)):
                 average_p.append(array2_y[o_pow][idx])
+          #  is_too_small = np.mean(average_p) if np.mean(average_p) > 5 * 10 ** -9 else 0
+          #  opPower.append(is_too_small)
             opPower.append(np.mean(average_p))
             opPower_std.append(np.std(average_p))
             average_p.clear()
 
-        ax.errorbar(voltages, currents, currents_std, fmt='-o',  color='black')
-       # ax.plot(voltages, currents, "k")
+        ax.errorbar(voltages, currents, currents_std, fmt=',', linewidth=0.5, color='black',  markersize=0.1, capthick=1, capsize=5, markeredgewidth=1)
+        ax.scatter(voltages, currents, s=4, linewidths=0.1, color='black')
+
+        # ax.plot(voltages, currents, "k")
 
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Current [A]")
@@ -123,11 +127,14 @@ class Auswertung:
 
         ax.grid(True)
         ax2 = ax.twinx()
-        ax2.errorbar(voltages, opPower, opPower_std, fmt='-o', color='blue')
-        ax2.plot(voltages, opPower, 'b')
+        ax2.errorbar(voltages, opPower, opPower_std, fmt=',', linewidth=0.5, color='blue', markersize=0.1, capthick=1, capsize=5, markeredgewidth=1)
+        ax2.scatter(voltages, opPower, s=4,  linewidths=0.1, color='blue')
+
+        #ax2.plot(voltages, opPower, 'b')
 
         ax2.grid(True)
         ax2.set_yscale('log')
+        plt.ylim([10**-9,10**-2])
         ax2.set_xlabel("Voltage [V]")
         ax2.set_ylabel("Opt. Power [W]")
         ax2.yaxis.label.set_color('blue')
@@ -226,6 +233,7 @@ class Auswertung:
                 Current_Array = np.asarray(Current_List)
                 CurrentDensity_Array = Current_Array / (LED_Area)
                 opPower_Array = np.asarray(opPower_List)
+
                 WPE_min_Array = opPower_Array / (Voltage_Array * Current_Array)
                 Last_opValue_Value = opPower_Array[len(opPower_Array) - 1]
                 Last_Current_Value = Current_Array[len(Current_Array) - 1]
