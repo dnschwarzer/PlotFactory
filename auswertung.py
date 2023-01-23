@@ -81,7 +81,6 @@ class Auswertung:
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
 
-
         # array_x[voltage][arrayNo] =
         currents = []
         currents_std = []
@@ -110,24 +109,33 @@ class Auswertung:
         for idx in range(0, len(array2_y[0])):
             for o_pow in range(0, len(array2_y)):
                 average_p.append(array2_y[o_pow][idx])
-          #  is_too_small = np.mean(average_p) if np.mean(average_p) > 5 * 10 ** -9 else 0
-          #  opPower.append(is_too_small)
-            opPower.append(np.mean(average_p))
-            opPower_std.append(np.std(average_p))
+            is_too_small_avg = np.mean(average_p) if np.mean(average_p) > 5 * 10 ** -9 else 0
+            is_too_small_std = np.std(average_p) if is_too_small_avg > 0 else 0
+            opPower.append(is_too_small_avg)
+            #opPower.append(np.mean(average_p))
+          #  opPower_std.append(np.std(average_p))
+            opPower_std.append(is_too_small_std)
             average_p.clear()
 
-        ax.errorbar(voltages, currents, currents_std, fmt=',', linewidth=0.5, color='black',  markersize=0.1, capthick=1, capsize=5, markeredgewidth=1)
+        ax.errorbar(voltages, currents, currents_std,
+                    fmt=',', linewidth=0.5, color='black',
+                    markersize=0.1, capthick=1, capsize=5,
+                    markeredgewidth=1)
+
         ax.scatter(voltages, currents, s=4, linewidths=0.1, color='black')
 
         # ax.plot(voltages, currents, "k")
-
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Current [A]")
         ax.set_yscale('log')
 
         ax.grid(True)
         ax2 = ax.twinx()
-        ax2.errorbar(voltages, opPower, opPower_std, fmt=',', linewidth=0.5, color='blue', markersize=0.1, capthick=1, capsize=5, markeredgewidth=1)
+        ax2.errorbar(voltages, opPower, opPower_std,
+                     fmt=',', linewidth=0.5, color='blue',
+                     markersize=0.1, capthick=1, capsize=5,
+                     markeredgewidth=1)
+
         ax2.scatter(voltages, opPower, s=4,  linewidths=0.1, color='blue')
 
         #ax2.plot(voltages, opPower, 'b')
@@ -183,7 +191,6 @@ class Auswertung:
 
         if not os.path.exists(syspath):
             return "provided path doesnt exist"
-
 
         if not os.path.exists(syspath + f"\\{self.output_dir}"):
             os.makedirs(syspath + f"\\{self.output_dir}")
