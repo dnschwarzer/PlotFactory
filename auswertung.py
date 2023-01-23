@@ -6,10 +6,14 @@ from fpdf import FPDF
 import pdf_creator as pdfc
 
 
-
 class Auswertung:
 
     output_dir = "Output"
+    file_paths = []
+    voltage_array_dim_2 = []
+    current_array_dim_2 = []
+    op_power_array_dim_2 = []
+
 
     def __init__(self, filepath, c: bool, v: bool):
         self.filepath = filepath
@@ -46,13 +50,11 @@ class Auswertung:
         file_name = file.split("/")[-1]
         path = f"{self.filepath}/{self.output_dir}/{file_name}"
         fig.savefig(path)
-        file_name_extracted = file_name.split(".")[0]
-
-        pdf_file_path = f"{self.filepath}/{self.output_dir}/{file_name_extracted}.pdf"
-        pdfc.create_pdf(path, pdf_file_path, file_name_extracted)
+        self.file_paths.append(path)
 
 
     async def plot_save_v(self, file, array_x, array_y, array2_y, title):
+
         fig, ax = plt.subplots(figsize=(9, 6))
         ax.set_title(title)
         ax.plot(array_x, array_y, "k")
@@ -70,6 +72,102 @@ class Auswertung:
         file_name = file.split("/")[-1]
         path = f"{self.filepath}/{self.output_dir}/{file_name}"
         fig.savefig(path)
+        self.file_paths.append(path)
+
+
+    #self.plot_save_v(f"{syspath}/{file}", Voltage_Array, Current_Array, opPower_Array, title)
+    async def plot_save_avg_v(self, file, array_x, array_y, array2_y, title):
+
+        fig, ax = plt.subplots(figsize=(9, 6))
+        ax.set_title(title)
+
+
+        # array_x[voltage][arrayNo] =
+        currents = []
+        currents_std = []
+        voltages = []
+        voltages_std = []
+        opPower = []
+        opPower_std = []
+        average_c = []
+        average_v = []
+        average_p = []
+
+        for idx in range(0, len(array_y[0])):
+            for curr in range(0, len(array_y)):
+                average_c.append(array_y[curr][idx])
+            currents.append(np.mean(average_c))
+            currents_std.append(np.std(average_c))
+            average_c.clear()
+
+        for idx in range(0, len(array_x[0])):
+            for vol in range(0, len(array_x)):
+                average_v.append(array_x[vol][idx])
+            voltages.append(np.mean(average_v))
+            voltages_std.append(np.std(average_v))
+            average_v.clear()
+
+        for idx in range(0, len(array2_y[0])):
+            for o_pow in range(0, len(array2_y)):
+                average_p.append(array2_y[o_pow][idx])
+            opPower.append(np.mean(average_p))
+            opPower_std.append(np.std(average_p))
+            average_p.clear()
+
+        ax.errorbar(voltages, currents, currents_std, fmt='-o',  color='black')
+       # ax.plot(voltages, currents, "k")
+
+        ax.set_xlabel("Voltage [V]")
+        ax.set_ylabel("Current [A]")
+        ax.set_yscale('log')
+
+        ax.grid(True)
+        ax2 = ax.twinx()
+        ax2.errorbar(voltages, opPower, opPower_std, fmt='-o', color='blue')
+        ax2.plot(voltages, opPower, 'b')
+
+        ax2.grid(True)
+        ax2.set_yscale('log')
+        ax2.set_xlabel("Voltage [V]")
+        ax2.set_ylabel("Opt. Power [W]")
+        ax2.yaxis.label.set_color('blue')
+        ax2.tick_params(axis='y', colors='blue')
+
+        file = file.replace(".csv", "_avg.png")
+        file_name = file.split("/")[-1]
+        path = f"{self.filepath}/{self.output_dir}/{file_name}"
+        fig.savefig(path)
+        self.file_paths.append(path)
+
+    async def plot_save_sum_v(self, file, array_x, array_y, array2_y, title):
+
+        fig, ax = plt.subplots(figsize=(9, 6))
+        ax.set_title(title)
+
+        for x in range(0, len(array_x)):
+            ax.plot(array_x[x], array_y[x], "k")
+
+        ax.set_xlabel("Voltage [V]")
+        ax.set_ylabel("Current [A]")
+        ax.set_yscale('log')
+
+        ax.grid(True)
+        ax2 = ax.twinx()
+        for x in range(0, len(array_x)):
+            ax2.plot(array_x[x], array2_y[x], 'b')
+
+        ax2.grid(True)
+        ax2.set_yscale('log')
+        ax2.set_xlabel("Voltage [V]")
+        ax2.set_ylabel("Opt. Power [W]")
+        ax2.yaxis.label.set_color('blue')
+        ax2.tick_params(axis='y', colors='blue')
+
+        file = file.replace(".csv", "_sum.png")
+        file_name = file.split("/")[-1]
+        path = f"{self.filepath}/{self.output_dir}/{file_name}"
+        fig.savefig(path)
+        self.file_paths.append(path)
 
     async def plot_files(self, filepath) -> str:
         syspath = filepath
@@ -182,8 +280,18 @@ class Auswertung:
                 if self.c:
                     await self.plot_save_c(f"{syspath}/{file}", CurrentDensity_Array[Voltage_Start_WPE_Index:], opPower_Array[Voltage_Start_WPE_Index:], WPE_Array[Voltage_Start_WPE_Index:], title)
 
-        return "finished"
+                if not IsOpenCircuit and not IsShorted:
+                    self.voltage_array_dim_2.append(Voltage_Array)
+                    self.current_array_dim_2.append(Current_Array)
+                    self.op_power_array_dim_2.append(opPower_Array)
 
+                file_name_extracted = file.split(".")[0]
+                pdf_file_path = f"{self.filepath}/{self.output_dir}/{file_name_extracted}.pdf"
+                pdfc.create_pdf(self.file_paths, pdf_file_path, file_name_extracted)
+                self.file_paths.clear()
+
+        #await self.plot_save_sum_v(f"{syspath}/{file}", self.voltage_array_dim_2, self.current_array_dim_2, self.op_power_array_dim_2, title)
+        await self.plot_save_avg_v(f"{syspath}/{file}", self.voltage_array_dim_2, self.current_array_dim_2, self.op_power_array_dim_2, title)
 
         with open(f'{syspath}/{self.output_dir}/_output.csv', 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f, lineterminator='\n', delimiter=";")
@@ -199,4 +307,4 @@ class Auswertung:
                 for j, r in enumerate(row):
                     row[j] = '{0:.2f}'.format(r).replace(".", ",")
                 writer.writerow(row)  # str(a).replace(".", ","))
-
+        return "finished"

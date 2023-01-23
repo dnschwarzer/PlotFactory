@@ -1,6 +1,7 @@
 from fpdf import FPDF
 import pathlib
 
+
 class PDF(FPDF):
     def header(self):
         # Logo
@@ -33,9 +34,12 @@ def create_pdf(image_path, file_path, file_name):
     pdf.set_font('helvetica', size=12)
     pdf.ln(15)
     pdf.cell(txt=file_name)
-    pdf.ln()
-    pdf.image(w=pdf.epw, name=image_path)
-    pdf.ln(1)
+
+    for paths in image_path:
+        pdf.ln()
+        pdf.image(w=pdf.epw, name=paths)
+        pdf.ln(1)
+
 
     pdf.set_font('helvetica', size=7)
 
