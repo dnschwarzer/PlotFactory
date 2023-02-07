@@ -16,7 +16,7 @@ layout = [
     [sg.Text('pick path', size=(size,height), background_color="blue")],
     [sg.Text('selected path:', size=(size,height)), sg.InputText(pathlib.Path().resolve(), key="csv_root_filepath", size=(size + 50, height)),
      sg.Button("open path dialog", key="button_openfiledialog", size=(size, height))],
-    [sg.Check('v', key='check_v'), sg.Check('c', key='check_c')],
+    [sg.Check('v', key='check_v', default=True), sg.Check('c', key='check_c', default=True)],
     [sg.Button("generate", key="button_generate_plots", size=(size, height))],
 ]
 
