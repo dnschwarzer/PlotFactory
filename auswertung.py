@@ -6,6 +6,8 @@ from fpdf import FPDF
 import pdf_creator as pdfc
 from pdf_creator import TableData
 import led_properties
+import fit as fit
+from numpy.polynomial import Polynomial
 
 
 
@@ -63,7 +65,7 @@ class Auswertung:
     async def plot_save_c_sum(self, file, current_density, op_power, wpe_array, title):
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
-        plt.xlim([10**2, 10**4])
+        plt.xlim([10**0, 10**4])
 
         data_points = len(current_density)
         for idx in range(0, data_points):
@@ -71,7 +73,6 @@ class Auswertung:
 
         ax.set_xscale('log')
         ax.set_xlabel("Current density [A/cm²]")
-        ax.set_yscale('log')
         ax.set_ylabel("Opt. Power [W]")
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
@@ -87,6 +88,75 @@ class Auswertung:
         ax2.tick_params(axis='y', colors='blue')
 
         file = file.replace(".csv", "_c_sum.png")
+        file_name = file.split("/")[-1]
+        path = f"{self.filepath}/{self.output_dir}/{file_name}"
+        fig.savefig(path)
+        self.summary_plot_paths.append(f"{path}.png")
+
+    async def plot_save_c_fit(self, file, array_x, array_y, array2_y, title):
+
+        fig, ax = plt.subplots(figsize=(18, 12))
+        ax.set_title("curve fitting")
+        plt.xlim([10**0, 10**4])
+        #self.current_density_array_sum, self.op_power_array_sum_c, self.wpe_array_sum
+        current_density = []
+        op_power = []
+        wpe_array = []
+        average_c = []
+        average_v = []
+        average_p = []
+
+        data_points = len(min(array_y, key=len))
+        led_cnt = len(array_y)
+
+        for idx in range(0, data_points):
+            for led in range(0, led_cnt):
+                average_c.append(array_y[led][idx])
+                average_v.append(array_x[led][idx])
+                average_p.append(array2_y[led][idx])
+
+            current_density.append(np.mean(average_c))
+            average_c.clear()
+
+            op_power.append(np.mean(average_v))
+            average_v.clear()
+
+            wpe_array.append(np.mean(average_p))
+            average_p.clear()
+
+        ax.set_xlabel("Current density [A/cm²]")
+        ax.set_ylabel("Opt. Power [W]")
+        ax.set_xscale('log')
+
+        op_power = np.array(op_power)
+        current_density = np.array(current_density)
+        wpe_array = np.array(wpe_array)
+
+        ax.grid(b=True, which='major', linestyle='-')
+        ax.grid(b=True, which='minor', linestyle='--')
+        ax.grid(True)
+
+        x = op_power
+        y = current_density
+        p = Polynomial.fit(x, y, 3)
+        ax.plot(*p.linspace(), c='black')
+        ax.scatter(x, y, marker='o', c='black')
+
+        ax2 = ax.twinx()
+        x = op_power
+        y = wpe_array
+        p = Polynomial.fit(x, y, 2)
+        ax2.plot(*p.linspace(), c='blue')
+        ax2.scatter(x, y, marker='o', c='blue')
+        ax2.grid(True)
+
+        ax2.set_xscale('log')
+        ax2.set_xlabel("Current density [A/cm²]")
+        ax2.set_ylabel("WPE [%]")
+        ax2.yaxis.label.set_color('blue')
+        ax2.tick_params(axis='y', colors='blue')
+
+        file = file.replace(".csv", "c_fit.png")
         file_name = file.split("/")[-1]
         path = f"{self.filepath}/{self.output_dir}/{file_name}"
         fig.savefig(path)
@@ -117,8 +187,9 @@ class Auswertung:
 
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
-        plt.xlim([10**2, 10**4])
+        #plt.xlim([10**2, 10**4])
         #plt.xlim([0,4])
+        plt.xlim([10**0, 10**4])
 
         currents = []
         currents_std = []
@@ -161,7 +232,6 @@ class Auswertung:
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_ylabel("Opt. Power [W]")
         ax.set_xscale('log')
-        ax.set_yscale('log')
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
@@ -233,7 +303,7 @@ class Auswertung:
         ax.scatter(voltages, currents, s=4, linewidths=0.1, color='black')
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Current [A]")
-        ax.set_yscale('log')
+        plt.xlim([2.5,6])
 
         ax.grid(True)
         ax2 = ax.twinx()
@@ -244,7 +314,6 @@ class Auswertung:
 
         ax2.scatter(voltages, opPower, s=4,  linewidths=0.1, color='blue')
         ax2.grid(True)
-        ax2.set_yscale('log')
         ax2.set_xlabel("Voltage [V]")
         ax2.set_ylabel("Opt. Power [W]")
         ax2.yaxis.label.set_color('blue')
@@ -266,8 +335,7 @@ class Auswertung:
 
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Current [A]")
-        ax.set_yscale('log')
-        #plt.xlim([0,4])
+        plt.xlim([2.5,6])
 
         ax.grid(True)
         ax2 = ax.twinx()
@@ -275,7 +343,6 @@ class Auswertung:
             ax2.plot(array_x[x], array2_y[x], 'b')
 
         ax2.grid(True)
-        ax2.set_yscale('log')
         ax2.set_xlabel("Voltage [V]")
         ax2.set_ylabel("Opt. Power [W]")
         ax2.yaxis.label.set_color('blue')
@@ -355,10 +422,8 @@ class Auswertung:
                         u_mess = float(row[0])
                         u_korr = float(row[1])
                         i_soll = float(row[2])
-                        i_mess = float(row[3])
-                        opt_power = float(row[4])
-                        current_density = float(row[5])
-                        measure_time = float(row[6])
+                        opt_power = float(row[3])
+                        current_density = float(row[4])
                         if opt_power == float('inf'):
                             opt_power = 0
                             print(f"inf at Q:{led_no}_ID{led_id}, row : {cnt}")
@@ -367,7 +432,6 @@ class Auswertung:
                         u_mess_li.append(u_mess)
                         u_korr_li.append(u_korr)
                         i_soll_li.append(i_soll)
-                        i_mess_li.append(i_mess)
 
 
                         # if(opt_power > 7*10E-10;100*opt_power/(volt*current);0)
@@ -379,7 +443,6 @@ class Auswertung:
 
                         op_power_li.append(opt_power)
                         current_density_li.append(current_density)
-                        measure_time_lo.append(measure_time)
                 Voltage_Array = np.asarray(u_mess_li)
                 Current_Soll_Array = np.asarray(i_soll_li)
                 Current_Mess_Array = np.asarray(i_mess_li)
@@ -389,7 +452,7 @@ class Auswertung:
                 opPower_Array = np.asarray(op_power_li)
 
                 # WPE = P_opt / P_el
-                WPE_min_Array = 100 * opPower_Array / (Voltage_Array * Current_Mess_Array)
+                WPE_min_Array = 100 * opPower_Array / (Voltage_Array * Current_Soll_Array)
 
                 Last_opValue_Value = opPower_Array[len(opPower_Array) - 1]
                 Last_Current_Value = Current_Soll_Array[len(Current_Soll_Array) - 1]
@@ -464,7 +527,7 @@ class Auswertung:
                 self.op_power_array_sum_c.append(opPower_Array)
 
                 #data for table
-                voltage_3_3 = self.find_nearest(Voltage_Array, value=2.3) # 2.3 weil messungen nur bis 2.7v
+                voltage_3_3 = self.find_nearest(Voltage_Array, value=3.3)
                 i_3_3v = Current_Soll_Array[voltage_3_3]
                 op_power_3_3v = opPower_Array[voltage_3_3]
                 table_entry = TableData(led.led_no, led.led_id, J_Max, WPE_Max, i_3_3v, op_power_3_3v, IsShorted, IsOpenCircuit)
@@ -480,7 +543,7 @@ class Auswertung:
                 self.summary_table_data_malfunc.append(self.summary_table_data[i])
                 malfunc.append(i-j)
                 j = j+1
-            if max(self.voltage_array_sum[i]) > 4 or self.summary_table_data[i].is_shorted:
+            if max(self.voltage_array_sum[i]) > 10 or self.summary_table_data[i].is_shorted:
                 self.summary_table_data[i].is_shorted = True
                 self.summary_table_data_malfunc.append(self.summary_table_data[i])
                 malfunc.append(i-j)
@@ -497,6 +560,7 @@ class Auswertung:
         # plot the 4 summary plots
         await self.plot_save_c_sum(f"{syspath}/{file}_c_sum", self.current_density_array_sum, self.op_power_array_sum_c, self.wpe_array_sum, "all LEDs")
         await self.plot_save_c_avg(f"{syspath}/{file}_c_avg", self.current_density_array_sum, self.op_power_array_sum_c, self.wpe_array_sum, "arithmetic mean and standard deviation")
+        await self.plot_save_c_fit(f"{syspath}/{file}_c_fit", self.current_density_array_sum, self.op_power_array_sum_c, self.wpe_array_sum, "arithmetic mean and standard deviation")
         await self.plot_save_sum_v(f"{syspath}/{file}_v_sum", self.voltage_array_sum, self.current_array_sum, self.op_power_array_sum_v, "all LEDs")
         await self.plot_save_avg_v(f"{syspath}/{file}_v_avg", self.voltage_array_sum, self.current_array_sum, self.op_power_array_sum_v, "arithmetic mean and standard deviation")
 
