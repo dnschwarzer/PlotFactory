@@ -42,16 +42,19 @@ class LedList:
         tmp_list = []
         for pixel in self.leds:
             tmp_list.append(pixel.wpe_array)
-            if pixel.is_shorted:
-                self.is_shorted_cnt = self.is_shorted_cnt + 1
-            if pixel.is_open_circuit:
-                self.is_open_circuit_cnt = self.is_open_circuit_cnt + 1
 
         self.max_data_points = len(max(tmp_list, key=len))
         # wenn nicht alle arrays gleiche länge : entferne
         for pixel in self.leds:
             if len(pixel.wpe_array) != self.max_data_points:
                 pixel.is_malfunctioning = True
+            if max(pixel.wpe_array) > 100:
+                pixel.is_malfunctioning = True
+                pixel.is_open_circuit = True
+            if pixel.is_shorted:
+                self.is_shorted_cnt = self.is_shorted_cnt + 1
+            if pixel.is_open_circuit:
+                self.is_open_circuit_cnt = self.is_open_circuit_cnt + 1
 
     def measurement_completed(self):
         self.filter(self)

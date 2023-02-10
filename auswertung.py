@@ -157,27 +157,26 @@ class Auswertung:
     async def plot_save_c_sum(self, file, title):
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
-        # plt.xlim([10 ** 0, 10 ** 4])
+        plt.xlim([10 ** 0, 10 ** 4])
 
-        op_power = np.array(self.led_list.op_power_array)
-        current_density = np.array(self.led_list.current_density_array)
-        wpe_array = np.array(self.led_list.wpe_array)
+        for led in self.led_list.leds:
+            if led.is_malfunctioning:
+                continue
+            ax.plot(led.current_density_array, led.op_power_array, "k")
 
-        data_points = len(current_density)
-        for idx in range(0, data_points):
-            ax.plot(current_density[idx], op_power[idx], "k")
-
-        #ax.set_xscale('log')
+        ax.set_xscale('log')
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_ylabel("Opt. Power [W]")
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax2 = ax.twinx()
 
-        for x in range(0, len(current_density)):
-            ax2.plot(current_density[x], wpe_array[x], 'b')
+        for led in self.led_list.leds:
+            if led.is_malfunctioning:
+                continue
+            ax2.plot(led.current_density_array, led.wpe_array, 'b')
 
-        #ax2.set_xscale('log')
+        ax2.set_xscale('log')
         ax2.set_xlabel("Current density [A/cm²]")
         ax2.set_ylabel("WPE [%]")
         ax2.yaxis.label.set_color('blue')
