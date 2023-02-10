@@ -16,8 +16,9 @@ layout = [
     [sg.Text('pick path', size=(size,height), background_color="blue")],
     [sg.Text('selected path:', size=(size,height)), sg.InputText(pathlib.Path().resolve(), key="csv_root_filepath", size=(size + 50, height)),
      sg.Button("open path dialog", key="button_openfiledialog", size=(size, height))],
-    [sg.Check('v', key='check_v', default=True), sg.Check('c', key='check_c', default=True)],
-    [sg.Button("generate", key="button_generate_plots", size=(size, height))],
+    [sg.Check('v', key='check_v', default=True, visible=False), sg.Check('c', key='check_c', default=True, visible=False)],
+    #[sg.Button("generate", key="button_generate_plots", size=(size, height))],
+    [sg.Text('ready', key='info', size=(size,height), background_color="green")]
 ]
 
 async def main_window():
@@ -38,14 +39,16 @@ async def main_window():
             root.withdraw()
 
             file_path = filedialog.askdirectory()
-            win["csv_root_filepath"].Update(file_path)
+            plot_factory = aw(file_path, True, True)
+            win["info"].Update("processing....")
+            await asyncio.sleep(0.1)
+            success = await plot_factory.build()
+            win["info"].Update("done")
+            sg.Popup(success)
+            #win["csv_root_filepath"].Update(file_path)
 
         if event == "button_generate_plots":
-            plot_factory = aw(values["csv_root_filepath"], values["check_c"], values["check_v"])
-            success = "failed"
-
-            success = await plot_factory.build()
-            sg.Popup(success)
+            i = 0
 
         await asyncio.sleep(0.1)
 

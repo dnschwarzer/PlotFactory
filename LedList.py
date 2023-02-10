@@ -25,13 +25,16 @@ class LedList:
     # means
     voltage_array_mean = []
     current_array_mean = []
-    current_density_array_mean  = []
-    wpe_array_mean  = []
-    op_power_array_mean  = []
+    current_density_array_mean = []
+    wpe_array_mean = []
+    op_power_array_mean = []
 
     # overview
     is_shorted_cnt = 0
     is_open_circuit_cnt = 0
+
+    # helper fields
+    max_data_points = 0
 
     def __init__(self):
         self.leds = []
@@ -45,10 +48,10 @@ class LedList:
             if pixel.is_open_circuit:
                 self.is_open_circuit_cnt = self.is_open_circuit_cnt + 1
 
-        max_data_points = len(max(tmp_list, key=len))
+        self.max_data_points = len(max(tmp_list, key=len))
 
         for pixel in self.leds:
-            if len(pixel.wpe_array) != max_data_points:
+            if len(pixel.wpe_array) != self.max_data_points:
                 pixel.is_malfunctioning = True
 
     def measurement_completed(self):
@@ -68,7 +71,7 @@ class LedList:
         self.calc_std_err_mean(self)
 
     def calc_std_err_mean(self):
-        data_points = len(self.leds[0].voltage_array)
+        data_points = self.max_data_points
 
         # tmp arrays
         tmp_voltage = []
@@ -79,6 +82,8 @@ class LedList:
 
         for point in range(0, data_points):
             for led in self.leds:
+                if led.is_malfunctioning:
+                    continue
                 tmp_voltage.append(led.voltage_korr_array[point])
                 tmp_current.append(led.current_soll_array[point])
                 tmp_density.append(led.current_density_array[point])
@@ -96,7 +101,7 @@ class LedList:
             self.voltage_array_mean.append(np.mean(tmp_voltage))
             self.current_array_mean.append(np.mean(tmp_current))
             self.current_density_array_mean.append(np.mean(tmp_density))
-            self.wpe_array_std_mean.append(np.mean(tmp_wpe))
+            self.wpe_array_mean.append(np.mean(tmp_wpe))
             self.op_power_array_mean.append(np.mean(tmp_op_power))
 
             # clear tmp list
