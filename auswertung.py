@@ -3,6 +3,8 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from fpdf import FPDF
+from matplotlib.ticker import FuncFormatter
+
 import pdf_creator as pdfc
 from pdf_creator import TableData
 import led_properties
@@ -49,7 +51,7 @@ class Auswertung:
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax2 = ax.twinx()
-        ax2.plot(array_x, array2_y * 100, 'b')
+        ax2.plot(array_x, array2_y, 'b')
         ax2.set_xscale('log')
         ax2.set_xlabel("Current density [A/cm²]")
         ax2.set_ylabel("WPE [%]")
@@ -235,6 +237,11 @@ class Auswertung:
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
+        from matplotlib.ticker import ScalarFormatter
+        for axis in [ax.xaxis, ax.yaxis]:
+            axis.set_major_formatter(ScalarFormatter())
+
+
         ax2 = ax.twinx()
         ax2.errorbar(voltages, op_power, op_power_std,
                      fmt=',', linewidth=0.5, color='blue',
@@ -245,9 +252,14 @@ class Auswertung:
 
         # ax2.plot(voltages, op_power, 'b')
 
-        ax2.grid(True)
+        ax2.grid(False  )
 
         ax2.set_xscale('log')
+
+        from matplotlib.ticker import ScalarFormatter
+        for axis in [ax2.xaxis, ax2.yaxis]:
+            axis.set_major_formatter(ScalarFormatter())
+
         ax2.set_xlabel("Current density [A/cm²]")
         ax2.set_ylabel("WPE [%]")
         ax2.yaxis.label.set_color('blue')
@@ -445,7 +457,6 @@ class Auswertung:
                         current_density_li.append(current_density)
                 Voltage_Array = np.asarray(u_mess_li)
                 Current_Soll_Array = np.asarray(i_soll_li)
-                Current_Mess_Array = np.asarray(i_mess_li)
                 #curr = max(abs((Current_Soll_Array - Current_Mess_Array) / Current_Soll_Array * 100))
                 #print(curr)
                 CurrentDensity_Array = np.asarray(current_density_li)
@@ -511,7 +522,7 @@ class Auswertung:
                 nits_WPE_Max_List.append(nits_max_FF)
                 # print(file, Voltage_Array[CurrentValue_Index], Current_Soll_Array[CurrentValue_Index], WPE_min_At_CurrentIndex, IsOpenCircuit, IsShorted)
                 title = f"Q{led.led_no} ID{led.led_id} : " + str(LED_Dim_x) + " µm x " + str(LED_Dim_y) + " µm, WPE_max = " + str(
-                    WPE_Max * 100) + " %, J_Max = " + str(CurrentDensity_Array[CurrentValue_Index]) + "A/cm²"
+                    WPE_Max * 100) + " %, J_Max = " + str(J_Max) + "A/cm²"
 
                 if self.v:
                     await self.plot_save_v(f"{syspath}/{file}", Voltage_Array, Current_Soll_Array, opPower_Array, title)
