@@ -2,7 +2,6 @@ import os
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List
 import pdf_creator as pdfc
 import led_properties
 import LedList as ll
@@ -158,7 +157,7 @@ class Auswertung:
     async def plot_save_c_sum(self, file, title):
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
-        #plt.xlim([10 ** 0, 10 ** 4])
+        # plt.xlim([10 ** 0, 10 ** 4])
 
         op_power = np.array(self.led_list.op_power_array)
         current_density = np.array(self.led_list.current_density_array)

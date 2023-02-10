@@ -1,5 +1,4 @@
 import numpy as np
-
 import led_properties as led
 import csv
 
@@ -49,7 +48,7 @@ class LedList:
                 self.is_open_circuit_cnt = self.is_open_circuit_cnt + 1
 
         self.max_data_points = len(max(tmp_list, key=len))
-
+        # wenn nicht alle arrays gleiche länge : entferne
         for pixel in self.leds:
             if len(pixel.wpe_array) != self.max_data_points:
                 pixel.is_malfunctioning = True
@@ -82,6 +81,7 @@ class LedList:
 
         for point in range(0, data_points):
             for led in self.leds:
+                # skip malfunctioning leds or corrupted measurements
                 if led.is_malfunctioning:
                     continue
                 tmp_voltage.append(led.voltage_korr_array[point])

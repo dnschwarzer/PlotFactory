@@ -175,9 +175,6 @@ class PDF(FPDF):
         pdf.ln()
 
         # malfunctioning led summary table
-        sc_count = 0
-        oc_count = 0
-
         pdf.set_x(cell_margin)
         pdf.cell(cell_width, cell_height, f"SC Count", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{led_list.is_shorted_cnt}", 1, 0, 'C')

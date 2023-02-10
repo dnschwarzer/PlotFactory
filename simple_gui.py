@@ -1,6 +1,5 @@
 import PySimpleGUI as sg
 import pathlib
-
 import asyncio
 import sys
 import tkinter as tk
@@ -17,9 +16,10 @@ layout = [
     [sg.Text('selected path:', size=(size,height)), sg.InputText(pathlib.Path().resolve(), key="csv_root_filepath", size=(size + 50, height)),
      sg.Button("open path dialog", key="button_openfiledialog", size=(size, height))],
     [sg.Check('v', key='check_v', default=True, visible=False), sg.Check('c', key='check_c', default=True, visible=False)],
-    #[sg.Button("generate", key="button_generate_plots", size=(size, height))],
+    # [sg.Button("generate", key="button_generate_plots", size=(size, height))],
     [sg.Text('ready', key='info', size=(size,height), background_color="green")]
 ]
+
 
 async def main_window():
     global file_path, event_dict

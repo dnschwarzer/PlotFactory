@@ -1,13 +1,9 @@
-import numpy
-import matplotlib
 import asyncio
 import simple_gui as gui
 
 
-
 async def main():
     instance_list = [
-
         # gui
         gui.main_window()
     ]
@@ -17,7 +13,6 @@ async def main():
     )
 
     while True:
-
         await asyncio.sleep(0.1)
 
 
