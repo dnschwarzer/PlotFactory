@@ -42,6 +42,8 @@ async def main_window():
 
         if event == "button_generate_plots":
             plot_factory = aw(values["csv_root_filepath"], values["check_c"], values["check_v"])
+            success = "failed"
+
             success = await plot_factory.build()
             sg.Popup(success)
 
