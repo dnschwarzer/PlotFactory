@@ -43,6 +43,7 @@ class LedList:
         for pixel in self.leds:
             tmp_list.append(pixel.wpe_array)
 
+
         self.max_data_points = len(max(tmp_list, key=len))
         # wenn nicht alle arrays gleiche länge : entferne
         for pixel in self.leds:

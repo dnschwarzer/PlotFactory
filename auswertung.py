@@ -49,13 +49,22 @@ class Auswertung:
         for file in os.listdir(syspath):
             if file.endswith(".csv"):
                 file_name = file.title().replace(".Csv", "")
-                date_time = file_name.split("____")[0].replace("_", "-")
-                measure_meta = file_name.split("____")[1]
+                file_name_split = file_name.split("____")
+
+                if len(file_name_split) != 2:
+                    continue
+
+                date_time = file_name_split[0].replace("_", "-")
+                measure_meta = file_name_split[1]
 
                 # assignments
-                led_no = int(measure_meta.split("_")[0].replace("Q", ""))
-                led_id = int(measure_meta.split("_")[1].replace("Id", ""))
-                led_area = float(measure_meta.split("_")[2].replace("D", ""))
+                measure_meta_split = measure_meta.split("_")
+                if len(measure_meta_split) != 3:
+                    continue
+                    
+                led_no = int(measure_meta_split[0].replace("Q", ""))
+                led_id = int(measure_meta_split[1].replace("Id", ""))
+                led_area = float(measure_meta_split[2].replace("D", ""))
                 led = led_properties.LED(led_no, led_area, led_id)
 
                 with open(f'{syspath}/{file}', 'r') as f:
@@ -68,6 +77,8 @@ class Auswertung:
                     reader = csv.reader(f, delimiter=";")
 
                     for row in reader:
+                        if len(row) != 5:
+                            continue
                         u_mess = float(row[0])
                         u_korr = float(row[1])
                         i_soll = float(row[2])
@@ -89,8 +100,10 @@ class Auswertung:
                         op_power_li.append(opt_power)
                         current_density_li.append(current_density)
 
-                # add data to led object and calculate other properties
+                if len(i_soll_li) <= 10:
+                    continue
 
+                # add data to led object and calculate other properties
                 led.add_data(u_mess_li, u_korr_li, i_soll_li, current_density_li, op_power_li)
 
                 title = f"Q{led.led_no} ID{led.led_id} : " + str(led.LED_Dim_x) + " µm x " + str(led.LED_Dim_y) + " µm, WPE_max = " + str(
@@ -103,6 +116,9 @@ class Auswertung:
 
                 self.single_plot_paths.clear()
                 self.led_list.leds.append(led)
+
+        if len(self.led_list.leds) == 0:
+            return "no well formatted files found"
 
         self.led_list.measurement_completed(self.led_list)
 
