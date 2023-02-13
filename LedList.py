@@ -6,12 +6,14 @@ import csv
 class LedList:
 
     leds: led = []
+    led_area_array = []
 
     # data
     voltage_array = []
     current_array = []
     current_density_array = []
     wpe_array = []
+    j_array = []
     op_power_array = []
 
     # std
@@ -20,6 +22,7 @@ class LedList:
     current_density_array_std = []
     wpe_array_std = []
     op_power_array_std = []
+    j_array_std = []
 
     # means
     voltage_array_mean = []
@@ -27,10 +30,16 @@ class LedList:
     current_density_array_mean = []
     wpe_array_mean = []
     op_power_array_mean = []
+    j_array_mean = []
 
     # overview
     is_shorted_cnt = 0
     is_open_circuit_cnt = 0
+    idx_wpe_max = 0
+    wpe_mean_max = 0
+    j_at_wpe_max = []
+    j_at_wpe_max_mean = 0
+    j_at_wpe_max_std = 0
 
     # helper fields
     max_data_points = 0
@@ -42,7 +51,6 @@ class LedList:
         tmp_list = []
         for pixel in self.leds:
             tmp_list.append(pixel.wpe_array)
-
 
         self.max_data_points = len(max(tmp_list, key=len))
         # wenn nicht alle arrays gleiche länge : entferne
@@ -66,10 +74,12 @@ class LedList:
         for pixel in self.leds:
             if not pixel.is_malfunctioning:
                 self.voltage_array.append(pixel.voltage_korr_array)
+                self.led_area_array.append(pixel.led_area)
                 self.current_array.append(pixel.current_soll_array)
                 self.op_power_array.append(pixel.op_power_array)
                 self.current_density_array.append(pixel.current_density_array)
                 self.wpe_array.append(pixel.wpe_array)
+                self.j_at_wpe_max.append(pixel.j_at_wpe_max)
 
         self.calc_std_err_mean(self)
 
@@ -82,6 +92,7 @@ class LedList:
         tmp_density = []
         tmp_wpe = []
         tmp_op_power = []
+        tmp_j = []
 
         for point in range(0, data_points):
             for led in self.leds:
@@ -93,6 +104,7 @@ class LedList:
                 tmp_density.append(led.current_density_array[point])
                 tmp_wpe.append(led.wpe_array[point])
                 tmp_op_power.append(led.op_power_array[point])
+                tmp_j.append(led.j_array[point])
 
             # error
             self.voltage_array_std.append(np.std(tmp_voltage))
@@ -100,6 +112,7 @@ class LedList:
             self.current_density_array_std.append(np.std(tmp_density))
             self.wpe_array_std.append(np.std(tmp_wpe))
             self.op_power_array_std.append(np.std(tmp_op_power))
+            self.j_array_std.append(np.std(tmp_j))
 
             # mean
             self.voltage_array_mean.append(np.mean(tmp_voltage))
@@ -107,6 +120,7 @@ class LedList:
             self.current_density_array_mean.append(np.mean(tmp_density))
             self.wpe_array_mean.append(np.mean(tmp_wpe))
             self.op_power_array_mean.append(np.mean(tmp_op_power))
+            self.j_array_mean.append(np.mean(tmp_j))
 
             # clear tmp list
             tmp_voltage.clear()
@@ -114,6 +128,13 @@ class LedList:
             tmp_density.clear()
             tmp_wpe.clear()
             tmp_op_power.clear()
+            tmp_j.clear()
+
+        # data for table
+        self.idx_wpe_max = np.array(self.wpe_array_mean).argmax(axis=0)
+        self.wpe_mean_max = max(self.wpe_array_mean)
+        self.j_at_wpe_max_mean = np.mean(np.array(self.j_at_wpe_max))
+        self.j_at_wpe_max_std = np.std(np.array(self.j_at_wpe_max))
 
     def create_csv(self, path):
         first_measurement = self.leds[0]

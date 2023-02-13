@@ -95,9 +95,9 @@ class PDF(FPDF):
         pdf.cell(0, 10, 'Overview', 0, 1, align='C')
         pdf.ln()
 
-        cell_width = 25
+        cell_width = 30
         cell_height = 7
-        cell_margin = 25
+        cell_margin = 7
         pdf.set_font('helvetica', size=7)
         pdf.set_x(cell_margin)
 
@@ -105,6 +105,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"LED ID", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"J max [A/cm^2]", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"WPE max", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"J at WPE max [A/cm^2]", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"I 3.3 V [A]", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"op. Power 3.3 V [W]", 1, 0, 'C')
         pdf.ln()
@@ -120,20 +121,27 @@ class PDF(FPDF):
                 pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
+                pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
+
             elif led.is_open_circuit and not led.is_shorted:
                 pdf.cell(cell_width, cell_height, f"open circuit", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"open circuit", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"open circuit", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"open circuit", 1, 0, 'C')
+                pdf.cell(cell_width, cell_height, f"open circuit", 1, 0, 'C')
+
             elif not led.is_open_circuit and not led.is_shorted and led.is_malfunctioning:
                 pdf.cell(cell_width, cell_height, f"measure error", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"measure error", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"measure error", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"measure error", 1, 0, 'C')
+                pdf.cell(cell_width, cell_height, f"measure error", 1, 0, 'C')
+
             else:
                 n = 3
                 pdf.cell(cell_width, cell_height, f"{float(led.j_max):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.wpe_max):.{n}}", 1, 0, 'C')
+                pdf.cell(cell_width, cell_height, f"{float(led.j_at_wpe_max):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.i_3_3v):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.op_power_3_3v):.{n}}", 1, 0, 'C')
             pdf.ln()
@@ -159,6 +167,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(j_max):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(wpe_max):.{3}}", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"{led_list.j_at_wpe_max_mean:.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(i_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(op_power_3_3v):.{3}}", 1, 0, 'C')
         pdf.ln()
@@ -169,6 +178,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(j_max):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(wpe_max):.{3}}", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"{led_list.j_at_wpe_max_std:.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(i_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(op_power_3_3v):.{3}}", 1, 0, 'C')
         pdf.ln()

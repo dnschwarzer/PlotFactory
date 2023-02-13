@@ -39,6 +39,7 @@ class LED:
 
     # calced data arrays
     wpe_array = []
+    j_array = []
     wpe_ivl_array = []
 
     # calced data single
@@ -54,6 +55,7 @@ class LED:
     wpe_max = 0
     wpe_ivl_max = 0
     wpe_max_index = 0
+    j_at_wpe_max = 0
     j_max = 0
     i_max = 0
 
@@ -83,6 +85,7 @@ class LED:
     def calc(self):
         # WPE = P_opt / P_el
         self.wpe_array = 100 * self.op_power_array / (self.voltage_korr_array * self.current_soll_array)
+        self.j_array = self.current_soll_array / ([self.led_area] * len(self.current_soll_array))
         last_op_value = self.op_power_array[len(self.op_power_array) - 1]
         last_current_value = self.current_soll_array[len(self.current_soll_array) - 1]
 
@@ -98,8 +101,9 @@ class LED:
             self.is_malfunctioning = True
 
         self.voltage_start_wpe_index = find_nearest(self.voltage_korr_array, value=self.voltage_start_wpe)
-        self.wpe_max = max(self.wpe_array[self.voltage_start_wpe_index:])
+        self.wpe_max = max(self.wpe_array)
         self.wpe_max_index = find_nearest(self.wpe_array, value=self.wpe_max)
+        self.j_at_wpe_max = self.j_array[self.wpe_max_index]
         self.CurrentValue_Index = find_nearest(self.current_soll_array, value=self.current_value)
 
         if self.is_malfunctioning:
@@ -120,9 +124,7 @@ class LED:
         self.wpe_ivl_array = abs(self.wpe_array / self.IVL_WPE_Collection)
         self.wpe_ivl_max = self.wpe_max / self.IVL_WPE_Collection
         self.i_max = self.current_soll_array[self.wpe_max_index]
-
-        # J = I / A
-        self.j_max = self.current_soll_array[self.wpe_max_index] / self.led_area
+        self.j_max = max(self.j_array)
 
         # data for table
         voltage_3_3 = find_nearest(self.voltage_korr_array, value=3.3)
