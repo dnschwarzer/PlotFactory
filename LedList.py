@@ -57,6 +57,7 @@ class LedList:
         for pixel in self.leds:
             if len(pixel.wpe_array) != self.max_data_points:
                 pixel.is_malfunctioning = True
+                pixel.is_open_circuit = True
             if max(pixel.wpe_array) > 100:
                 pixel.is_malfunctioning = True
                 pixel.is_open_circuit = True
