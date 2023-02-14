@@ -95,7 +95,7 @@ class Auswertung:
 
                         # filter opt_power noise
                         # if(opt_power > 7*10E-10;100*opt_power/(volt*current);0)
-                        if cnt < 30:
+                        if opt_power < 3*10**-8 or cnt < 10:
                             # opt_power = 100 * opt_power/(u_korr * i_mess)
                             opt_power = 0
                         else:
@@ -136,17 +136,28 @@ class Auswertung:
         first_led = self.led_list.leds[0]
         footer = f"{round(first_led.LED_Dim_x * 10 ** 4)} µm x {round(first_led.LED_Dim_y * 10 ** 4)} µm"
 
+        # calc ax limits
         self.led_list.measurement_completed(self.led_list)
+        self.limit_x_axis_voltage_end = max(self.led_list.voltage_array_mean)
+        self.limit_x_axis_density_end = max(self.led_list.current_density_array_mean)
+        op_idx = 0
+        while self.led_list.op_power_array_mean[op_idx] == 0:
+            op_idx = op_idx + 1
+        self.limit_x_axis_density_begin = self.led_list.current_density_array_mean[op_idx+1]
+
+
+
         file = "output"
+        file_footer = footer.replace(" ", "_")
         # plot the 4 summary plots
-        await self.plot_save_c_sum(f"{syspath}/{file}_c_sum", "all LEDs " + footer)
-        await self.plot_save_c_avg(f"{syspath}/{file}_c_avg", "arithmetic mean and standard deviation " + footer)
-        await self.plot_save_c_fit(f"{syspath}/{file}_c_fit", "curve fitting " + footer)
-        await self.plot_save_sum_v(f"{syspath}/{file}_v_sum", "all LEDs " + footer)
-        await self.plot_save_avg_v(f"{syspath}/{file}_v_avg", "arithmetic mean and standard deviation " + footer)
+        await self.plot_save_c_sum(f"{syspath}/{file}_c_{file_footer}", "all LEDs " + footer)
+        await self.plot_save_c_avg(f"{syspath}/{file}_c_{file_footer}_avg", "arithmetic mean and standard deviation " + footer)
+        #await self.plot_save_c_fit(f"{syspath}/{file}_c_{file_footer}_fit", "curve fitting " + footer)
+        await self.plot_save_sum_v(f"{syspath}/{file}_v_{file_footer}_sum", "all LEDs " + footer)
+        await self.plot_save_avg_v(f"{syspath}/{file}_v_{file_footer}_avg", "arithmetic mean and standard deviation " + footer)
 
         # output path and filename for summary pdf
-        pdf_summary_path = f"{self.filepath}/{self.output_dir}/summary.pdf"
+        pdf_summary_path = f"{self.filepath}/{self.output_dir}/summary_{file_footer}.pdf"
 
         # create the actual summary pdf
         header = f'Measurement report {date_time}'
@@ -165,6 +176,7 @@ class Auswertung:
         ax.set_title(title)
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
+        ax.set_yscale('log')
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_yscale('log')
         ax.set_ylabel("Opt. Power [W]")
@@ -177,6 +189,7 @@ class Auswertung:
         ax2.set_ylabel("WPE [%]")
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
+        ax2.grid(False)
 
         file = file.replace(".csv", "_c.png")
         file_name = file.split("/")[-1]
@@ -189,11 +202,11 @@ class Auswertung:
         ax.set_title(title)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
+        ax.set_yscale('log')
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_ylabel("Opt. Power [W]")
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
-        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
         for led in self.led_list.leds:
             if led.is_malfunctioning:
@@ -216,6 +229,7 @@ class Auswertung:
         ax2.set_ylabel("WPE [%]")
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
+        ax2.grid(False)
 
         file = file.replace(".csv", "_c_sum.png")
         file_name = file.split("/")[-1]
@@ -232,39 +246,28 @@ class Auswertung:
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_ylabel("Opt. Power [W]")
         ax.set_xscale('log')
+        ax.set_yscale('log')
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
-        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
         op_power = np.array(self.led_list.op_power_array_mean)
         current_density = np.array(self.led_list.current_density_array_mean)
         wpe_array = np.array(self.led_list.wpe_array_mean)
 
-        wpe_idx = 0
-        while op_power[wpe_idx] == 0:
-            wpe_idx = wpe_idx + 1
+        # limit for ax
+        idx_density_start = find_nearest(current_density, self.limit_x_axis_density_begin)
 
-        start_idx = 0
-        end_idx = 0
-        for idx in range(0, len(op_power)):
-            if wpe_array[idx] >= 3 and start_idx == 0:
-                start_idx = idx
-            if start_idx != 0 and wpe_array[idx] <= 3:
-                end_idx = idx
-                break
-
-        print(f"wpe index = {wpe_idx}")
-
-
-        x = current_density
-        y = op_power
-        p = Polynomial.fit(x, y, 3)
-        ax.plot(*p.linspace(), c='black')
+        x = current_density[idx_density_start:]
+        y = op_power[idx_density_start:]
+        logx, logy = np.log(x), np.log(y)
+        p = np.polyfit(logx, logy, 3)
+        y_fit = np.exp(np.polyval(p, logx))
+        ax.plot(x, y_fit, c='blue')
         ax.scatter(x, y, marker='o', c='black')
 
 
-        #limits for fitting
+        # limits for fitting ax2
         idx_wpe_max = wpe_array.argmax(axis=0)
         j_at_wpe_max = self.led_list.current_array_mean[idx_wpe_max] / self.led_list.leds[0].led_area
         n = 3
@@ -275,16 +278,19 @@ class Auswertung:
 
         # ax 2
         ax2 = ax.twinx()
+
         x = current_density[start_idx:end_idx]
         y = wpe_array[start_idx:end_idx]
-        p = Polynomial.fit(x, y, 8)
-        ax2.plot(*p.linspace(), c='blue')
-
+        # scale is log, therefore log values
+        logx, logy = np.log(x), np.log(y)
+        p = np.polyfit(logx, logy, 8)
+        y_fit = lambda vlambda: np.exp(np.polyval(p, logx))
+        ax2.plot(x, y_fit, c='blue')
         ax2.scatter(current_density[:start_idx], wpe_array[:start_idx], marker='o', c='blue')
         ax2.scatter(current_density[end_idx:], wpe_array[end_idx:], marker='o', c='blue')
 
         # format ax2
-        ax2.grid(True)
+        ax2.grid(False)
         ax2.set_xscale('log')
         ax2.set_xlabel("Current density [A/cm²]")
         ax2.set_ylabel("WPE [%]")
@@ -306,12 +312,12 @@ class Auswertung:
         ax.set_title(title)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
+        ax.set_yscale('log')
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_ylabel("Opt. Power [W]")
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
-        plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
         ax.errorbar(self.led_list.current_density_array_mean,
                     self.led_list.op_power_array_mean, self.led_list.op_power_array_std,
@@ -352,15 +358,18 @@ class Auswertung:
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
         ax.plot(array_x, array_y, "k")
+        ax.set_yscale('log')
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Current [A]")
         ax.grid(True)
         ax2 = ax.twinx()
         ax2.plot(array_x, array2_y, 'b')
+        ax2.set_yscale('log')
         ax2.set_xlabel("Voltage [V]")
         ax2.set_ylabel("Opt. Power [W]")
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
+        ax2.grid(False)
 
         file = file.replace(".csv", "_v.png")
         file_name = file.split("/")[-1]
@@ -379,7 +388,7 @@ class Auswertung:
 
         ax.scatter(self.led_list.voltage_array_mean, self.led_list.current_array_mean, s=4, linewidths=0.1, color='black')
         ax.set_xlabel("Voltage [V]")
-
+        ax.set_yscale('log')
         ax.set_ylabel("Current [A]")
 
         plt.xlim([self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end])
@@ -393,7 +402,8 @@ class Auswertung:
                      markeredgewidth=1)
 
         ax2.scatter(self.led_list.voltage_array_mean, self.led_list.op_power_array_mean, s=4, linewidths=0.1, color='blue')
-        ax2.grid(True)
+        ax2.grid(False)
+        ax2.set_yscale('log')
         ax2.set_xlabel("Voltage [V]")
         ax2.set_ylabel("Opt. Power [W]")
         ax2.yaxis.label.set_color('blue')
@@ -411,22 +421,29 @@ class Auswertung:
         # plt.ylim([10**-7, 10**-4])
 
         for led in self.led_list.leds:
+            if led.is_malfunctioning:
+                continue
             ax.plot(led.voltage_korr_array, led.current_soll_array, "k")
 
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Current [A]")
+        ax.set_yscale('log')
+
         plt.xlim([self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end])
 
         ax.grid(True)
         ax2 = ax.twinx()
         for led in self.led_list.leds:
+            if led.is_malfunctioning:
+                continue
             ax2.plot(led.voltage_korr_array, led.op_power_array, 'b')
 
-        ax2.grid(True)
+        ax2.grid(False)
         ax2.set_xlabel("Voltage [V]")
         ax2.set_ylabel("Opt. Power [W]")
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
+        ax2.set_yscale('log')
 
         file = file.replace(".csv", "_sum.png")
         file_name = file.split("/")[-1]

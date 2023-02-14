@@ -5,7 +5,7 @@ import sys
 import tkinter as tk
 from tkinter import filedialog
 
-from auswertung import Auswertung as aw
+import auswertung
 
 size = 11
 height = 1
@@ -39,12 +39,14 @@ async def main_window():
             root.withdraw()
 
             file_path = filedialog.askdirectory()
-            plot_factory = aw(file_path, True, True)
+            plot_factory = auswertung.Auswertung(file_path, True, True)
             win["info"].Update("processing....")
             await asyncio.sleep(0.1)
             success = await plot_factory.build()
             win["info"].Update("done")
             sg.Popup(success)
+            sys.exit(1)
+            window.close()
             #win["csv_root_filepath"].Update(file_path)
 
         if event == "button_generate_plots":
