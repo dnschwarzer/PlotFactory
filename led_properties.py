@@ -10,67 +10,62 @@ def find_nearest(array, value):
 
 class LED:
 
-    # led properties
-    led_no = 0
-    led_area = 0
-    led_id = 0
-    LED_Dim_x = 0.0
-    LED_Dim_y = 0.0
-    is_init = False
-    is_shorted = False
-    is_open_circuit = False
-    is_malfunctioning = False
-
-    # limits / constants
-    lumefficency_blue = 42
-    current_value = 20 * 10 ** (-6)
-    OpPowerLimit = 10 ** -7
-    OpenCircuitLimit = 10 ** -6
-    voltage_start_wpe = 2
-    IVL_NA = 0.91
-    IVL_WPE_Collection = IVL_NA ** 2
-
-    # measured data
-    voltage_mess_array = []
-    voltage_korr_array = []
-    current_soll_array = []
-    current_density_array = []
-    op_power_array = []
-
-    # calced data arrays
-    wpe_array = []
-    j_array = []
-    wpe_ivl_array = []
-
-    # calced data single
-    op_power_current = 0
-    op_power_max = 0
-    voltage_start_wpe_index = 0
-    CurrentValue_Index = 0
-    op_power_3_3v = 0
-    i_3_3v = 0
-    wpe_current = 0
-
-    # max
-    wpe_max = 0
-    wpe_ivl_max = 0
-    wpe_max_index = 0
-    j_at_wpe_max = 0
-    j_max = 0
-    i_max = 0
-
-    # nits
-    nits_max = 0
-    nits_current_FF = 0
-    nits_max_FF = 0
-    nits_current = 0
-
     def __init__(self, led_no, led_area, led_id):
         self.led_no = led_no
         self.led_id = led_id
         self.led_area = led_area * 10 ** (-8)  # cm²
         self.LED_Dim_x = math.sqrt(self.led_area)
         self.LED_Dim_y = math.sqrt(self.led_area)
+
+        # led properties
+        self.is_init = False
+        self.is_shorted = False
+        self.is_open_circuit = False
+        self.is_malfunctioning = False
+
+        # limits / constants
+        self.lumefficency_blue = 42
+        self.current_value = 20 * 10 ** (-6)
+        self.OpPowerLimit = 10 ** -7
+        self.OpenCircuitLimit = 10 ** -6
+        self.voltage_start_wpe = 2
+        self.IVL_NA = 0.91
+        self.IVL_WPE_Collection = self.IVL_NA ** 2
+
+        # measured data
+        self.voltage_mess_array = []
+        self.voltage_korr_array = []
+        self.current_soll_array = []
+        self.current_density_array = []
+        self.op_power_array = []
+
+        # calced data arrays
+        self.wpe_array = []
+        self.j_array = []
+        self.wpe_ivl_array = []
+
+        # calced data single
+        self.op_power_current = 0
+        self.op_power_max = 0
+        self.voltage_start_wpe_index = 0
+        self.CurrentValue_Index = 0
+        self.op_power_3_3v = 0
+        self.i_3_3v = 0
+        self.wpe_current = 0
+
+        # max
+        self.wpe_max = 0
+        self.wpe_ivl_max = 0
+        self.wpe_max_index = 0
+        self.j_at_wpe_max = 0
+        self.j_max = 0
+        self.i_max = 0
+
+        # nits
+        self.nits_max = 0
+        self.nits_current_FF = 0
+        self.nits_max_FF = 0
+        self.nits_current = 0
 
     def add_data(self, vol_mess, vol_korr, current_soll, current_dens, op_power):
         self.voltage_mess_array = np.asarray(vol_mess)
@@ -84,8 +79,8 @@ class LED:
 
     def calc(self):
         # WPE = P_opt / P_el
-        self.wpe_array = 100 * self.op_power_array / (self.voltage_korr_array * self.current_soll_array)
-        self.j_array = self.current_soll_array / ([self.led_area] * len(self.current_soll_array))
+        self.wpe_array = np.asarray(100 * self.op_power_array) / np.asarray((self.voltage_korr_array * self.current_soll_array))
+        self.j_array = np.asarray(self.current_soll_array) / np.asarray(([self.led_area] * len(self.current_soll_array)))
         last_op_value = self.op_power_array[len(self.op_power_array) - 1]
         last_current_value = self.current_soll_array[len(self.current_soll_array) - 1]
 

@@ -5,47 +5,45 @@ import csv
 
 class LedList:
 
-    leds: led = []
-    led_area_array = []
-
-    # data
-    voltage_array = []
-    current_array = []
-    current_density_array = []
-    wpe_array = []
-    j_array = []
-    op_power_array = []
-
-    # std
-    voltage_array_std = []
-    current_array_std = []
-    current_density_array_std = []
-    wpe_array_std = []
-    op_power_array_std = []
-    j_array_std = []
-
-    # means
-    voltage_array_mean = []
-    current_array_mean = []
-    current_density_array_mean = []
-    wpe_array_mean = []
-    op_power_array_mean = []
-    j_array_mean = []
-
-    # overview
-    is_shorted_cnt = 0
-    is_open_circuit_cnt = 0
-    idx_wpe_max = 0
-    wpe_mean_max = 0
-    j_at_wpe_max = []
-    j_at_wpe_max_mean = 0
-    j_at_wpe_max_std = 0
-
-    # helper fields
-    max_data_points = 0
-
     def __init__(self):
         self.leds = []
+        self.led_area_array = []
+
+        # data
+        self.voltage_array = []
+        self.current_array = []
+        self.current_density_array = []
+        self.wpe_array = []
+        self.j_array = []
+        self.op_power_array = []
+
+        # std
+        self.voltage_array_std = []
+        self.current_array_std = []
+        self.current_density_array_std = []
+        self.wpe_array_std = []
+        self.op_power_array_std = []
+        self.j_array_std = []
+
+        # means
+        self.voltage_array_mean = []
+        self.current_array_mean = []
+        self.current_density_array_mean = []
+        self.wpe_array_mean = []
+        self.op_power_array_mean = []
+        self.j_array_mean = []
+
+        # overview
+        self.is_shorted_cnt = 0
+        self.is_open_circuit_cnt = 0
+        self.idx_wpe_max = 0
+        self.wpe_mean_max = 0
+        self.j_at_wpe_max = []
+        self.j_at_wpe_max_mean = 0
+        self.j_at_wpe_max_std = 0
+
+        # helper fields
+        self.max_data_points = 0
 
     def filter(self):
         tmp_list = []
@@ -67,7 +65,7 @@ class LedList:
                 self.is_open_circuit_cnt = self.is_open_circuit_cnt + 1
 
     def measurement_completed(self):
-        self.filter(self)
+        self.filter()
 
         # sort for LED no
         self.leds.sort(key=lambda x: x.led_no)
@@ -81,8 +79,9 @@ class LedList:
                 self.current_density_array.append(pixel.current_density_array)
                 self.wpe_array.append(pixel.wpe_array)
                 self.j_at_wpe_max.append(pixel.j_at_wpe_max)
+                self.j_array.append(pixel.j_array)
 
-        self.calc_std_err_mean(self)
+        self.calc_std_err_mean()
 
     def calc_std_err_mean(self):
         data_points = self.max_data_points
