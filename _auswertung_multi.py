@@ -52,6 +52,8 @@ class AuswertungExtensionMulti():
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
         color_cnt = 0
+
+        led_lists.sort(key=lambda x: x.area, reverse=False)
         for led_list in led_lists:
             first_led = led_list.leds[0]
             label = f"{round(first_led.LED_Dim_x * 10 ** 4)}µm"
@@ -79,7 +81,7 @@ class AuswertungExtensionMulti():
             ax2.plot(led_list.current_density_array_mean, led_list.wpe_array_mean, self.color_wheel[color_cnt], label = label)
             color_cnt = color_cnt + 1
 
-
+        ax2.set_ylim(bottom=0)
         file = file.replace(".csv", ".png")
         file_name = file.split("/")[-1]
         path = f"{self.filepath}/{file_name}"
@@ -109,10 +111,10 @@ class AuswertungExtensionMulti():
             dim = [first_led.LED_Dim_x * 10 ** 4]
             max_wpe = [max(led_list.wpe_array_mean)]
             #ax.plot(x='x', y='y', ax=ax, kind='scatter', label=label)
-            ax.plot(dim, max_wpe, self.color_wheel[color_cnt], label = label, markersize=10, marker="o")
+            ax.plot(dim, max_wpe, "black", label = label, markersize=10, marker="o")
             color_cnt = color_cnt + 1
 
-        plt.legend(loc="upper left")
+        #plt.legend(loc="upper left")
 
 
         file = file.replace(".csv", ".png")

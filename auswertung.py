@@ -284,6 +284,7 @@ class Auswertung:
 
             first_led = current_led_list.leds[0]
             footer = f"{round(first_led.LED_Dim_x * 10 ** 4)} µm x {round(first_led.LED_Dim_y * 10 ** 4)} µm"
+            file_footer = footer.replace(" ", "_")
 
             # calc ax limits
             current_led_list.measurement_completed()
@@ -294,34 +295,31 @@ class Auswertung:
                 op_idx = op_idx + 1
             self.limit_x_axis_density_begin = current_led_list.current_density_array_mean[op_idx+1]
 
-
-
-            file = "output"
-            file_footer = footer.replace(" ", "_")
-
-            # outsourcing extension methods
-            #single = Single(current_led_list, folder, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
-
-            # plot the 4 summary plots
-            #await single.plot_save_c_sum(f"{folder}/{self.output_dir}/{file_footer}_c_sum", "all LEDs " + footer, current_led_list)
-            #await single.plot_save_c_avg(f"{folder}/{self.output_dir}/{file_footer}_c_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
-            #await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
-            #await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
-            #await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
-
-            # output path and filename for summary pdf
-            #pdf_summary_path = f"{folder}/{self.output_dir}/summary_{file_footer}.pdf"
-
-            # create the actual summary pdf
-            header = f'Measurement report {date_time}'
-            #pdfc.PDF(header, footer).create_summary_pdf(self.summary_plot_paths, pdf_summary_path, f"Summary of {len(current_led_list.leds)} x {footer}",
-           #                                             current_led_list)
-
-            # create csv
-            csv_path = f'{folder}/{self.output_dir}/_output.csv'
-            current_led_list.create_csv(csv_path)
-
             self.list_of_measurements.append(current_led_list)
+            is_single_plot = False
+            if is_single_plot:
+                # outsourcing extension methods
+                single = Single(current_led_list, folder, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
+
+                # plot the 4 summary plots
+                await single.plot_save_c_sum(f"{folder}/{self.output_dir}/{file_footer}_c_sum", "all LEDs " + footer, current_led_list)
+                await single.plot_save_c_avg(f"{folder}/{self.output_dir}/{file_footer}_c_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
+                await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
+                await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
+                await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
+
+                # output path and filename for summary pdf
+                pdf_summary_path = f"{folder}/{self.output_dir}/summary_{file_footer}.pdf"
+
+                # create the actual summary pdf
+                header = f'Measurement report {date_time}'
+                pdfc.PDF(header, footer).create_summary_pdf(self.summary_plot_paths, pdf_summary_path, f"Summary of {len(current_led_list.leds)} x {footer}",
+                                                            current_led_list)
+
+                # create csv
+                csv_path = f'{folder}/{self.output_dir}/_output.csv'
+                current_led_list.create_csv(csv_path)
+
 
         # all measurements
         multi = Multi(self.filepath, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)

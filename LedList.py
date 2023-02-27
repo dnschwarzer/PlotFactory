@@ -8,6 +8,7 @@ class LedList:
     def __init__(self):
         self.leds = []
         self.led_area_array = []
+        self.area = 0
 
         # data
         self.voltage_array = []
@@ -69,6 +70,7 @@ class LedList:
 
         # sort for LED no
         self.leds.sort(key=lambda x: x.led_no)
+        self.area = self.leds[0].LED_Dim_x * self.leds[0].LED_Dim_y if len(self.leds) > 0 else 0
 
         for pixel in self.leds:
             if not pixel.is_malfunctioning:
