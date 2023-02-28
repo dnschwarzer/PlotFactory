@@ -29,6 +29,7 @@ class AuswertungExtensionMulti():
         self.limit_x_axis_voltage_begin = limit_vol_beg
         self.limit_x_axis_voltage_end = limit_vol_end
         self.summary_plot_paths = summary
+        self.fontsize = 35
 
     def find_min_op(self, led_lists):
         op_idx_li = []
@@ -42,18 +43,17 @@ class AuswertungExtensionMulti():
 
     async def plot_save_c_avg(self, file, title, led_lists):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        ax.set_title(title, fontsize=self.fontsize)
         plt.xlim([self.find_min_op(led_lists), self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel("Current density [A/cm²]")
-        ax.set_ylabel("Opt. Power [W]")
+        ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
         color_cnt = 0
 
-        led_lists.sort(key=lambda x: x.area, reverse=False)
         for led_list in led_lists:
             first_led = led_list.leds[0]
             label = f"{round(first_led.LED_Dim_x * 10 ** 4)}µm"
@@ -65,8 +65,8 @@ class AuswertungExtensionMulti():
         # format ax2
         ax2 = ax.twinx()
 
-        ax2.set_xlabel("Current density [A/cm²]")
-        ax2.set_ylabel("WPE [%]")
+        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
@@ -113,6 +113,10 @@ class AuswertungExtensionMulti():
             #ax.plot(x='x', y='y', ax=ax, kind='scatter', label=label)
             ax.plot(dim, max_wpe, "black", label = label, markersize=10, marker="o")
             color_cnt = color_cnt + 1
+
+        ax.set_ylim(bottom=2.4)
+        ax.set_xlim(left=0.9)
+
 
         #plt.legend(loc="upper left")
 

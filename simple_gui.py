@@ -12,10 +12,10 @@ height = 1
 file_path = ""
 
 layout = [
-    [sg.Text('pick path', size=(size,height), background_color="blue")],
+    [sg.Text('select parent folder', size=(size + 10,height), background_color="blue")],
     [sg.Text('selected path:', size=(size,height)), sg.InputText(pathlib.Path().resolve(), key="csv_root_filepath", size=(size + 50, height)),
      sg.Button("open path dialog", key="button_openfiledialog", size=(size, height))],
-    [sg.Check('v', key='check_v', default=True, visible=False), sg.Check('c', key='check_c', default=True, visible=False)],
+    [sg.Check('pixel plot', key='do_pixel_plot', default=False, visible=True), sg.Check('array plot', key='do_array_plot', default=False, visible=True), sg.Check('summary plot', key='do_summary_plot', default=True, visible=True)],
     # [sg.Button("generate", key="button_generate_plots", size=(size, height))],
     [sg.Text('ready', key='info', size=(size,height), background_color="green")]
 ]
@@ -39,7 +39,7 @@ async def main_window():
             root.withdraw()
 
             file_path = filedialog.askdirectory()
-            plot_factory = auswertung.Auswertung(file_path, True, True, True)
+            plot_factory = auswertung.Auswertung(file_path, values["do_pixel_plot"], values["do_array_plot"], values["do_summary_plot"])
             win["info"].Update("processing....")
             await asyncio.sleep(0.1)
             success = await plot_factory.build()

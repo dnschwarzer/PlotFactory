@@ -18,10 +18,12 @@ class AuswertungExtensionSingle():
         self.limit_x_axis_voltage_begin = limit_vol_beg
         self.limit_x_axis_voltage_end = limit_vol_end
         self.summary_plot_paths = summary
+        self.fontsize = 35
+
 
     async def plot_save_c_sum(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        ax.set_title(title, fontsize=self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -46,8 +48,8 @@ class AuswertungExtensionSingle():
         from matplotlib.ticker import ScalarFormatter
         for axis in [ax2.xaxis, ax2.yaxis]:
             axis.set_major_formatter(ScalarFormatter())
-        ax2.set_xlabel("Current density [A/cm²]")
-        ax2.set_ylabel("WPE [%]")
+        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
@@ -62,10 +64,10 @@ class AuswertungExtensionSingle():
         fig, ax = plt.subplots(figsize=(18, 12))
 
         # format ax 1
-        ax.set_title(title)
+        ax.set_title(title, fontsize=self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
-        ax.set_xlabel("Current density [A/cm²]")
-        ax.set_ylabel("Opt. Power [W]")
+        ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.grid(b=True, which='major', linestyle='-')
@@ -106,7 +108,7 @@ class AuswertungExtensionSingle():
         # scale is log, therefore log values
         logx, logy = np.log(x), np.log(y)
         p = np.polyfit(logx, logy, 8)
-        y_fit = lambda vlambda: np.exp(np.polyval(p, logx))
+        y_fit = np.exp(np.polyval(p, logx))
         ax2.plot(x, y_fit, c='blue')
         ax2.scatter(current_density[:start_idx], wpe_array[:start_idx], marker='o', c='blue')
         ax2.scatter(current_density[end_idx:], wpe_array[end_idx:], marker='o', c='blue')
@@ -114,8 +116,8 @@ class AuswertungExtensionSingle():
         # format ax2
         ax2.grid(False)
         ax2.set_xscale('log')
-        ax2.set_xlabel("Current density [A/cm²]")
-        ax2.set_ylabel("WPE [%]")
+        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         from matplotlib.ticker import ScalarFormatter
@@ -131,12 +133,12 @@ class AuswertungExtensionSingle():
 
     async def plot_save_c_avg(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        ax.set_title(title, fontsize=self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel("Current density [A/cm²]")
-        ax.set_ylabel("Opt. Power [W]")
+        ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
@@ -153,8 +155,8 @@ class AuswertungExtensionSingle():
         # format ax2
         ax2 = ax.twinx()
 
-        ax2.set_xlabel("Current density [A/cm²]")
-        ax2.set_ylabel("WPE [%]")
+        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
@@ -180,7 +182,7 @@ class AuswertungExtensionSingle():
     async def plot_save_avg_v(self, file, title, led_list):
         fig, host = plt.subplots(figsize=(18, 12))
         fig.subplots_adjust(left=0.20)
-        host.set_title(title)
+        host.set_title(title, fontsize=self.fontsize)
 
         host_col = "black"
         par1_col = "blue"
@@ -230,10 +232,10 @@ class AuswertungExtensionSingle():
                      linewidths=0.1,
                      color=par2_col)
 
-        host.set_xlabel("Voltage [V]")
-        host.set_ylabel("Current [A]")
-        par2.set_ylabel("Current Density [A/cm²]")
-        par1.set_ylabel("Opt. Power [W]")
+        host.set_xlabel("Voltage [V]", fontsize=self.fontsize)
+        host.set_ylabel("Current [A]", fontsize=self.fontsize)
+        par2.set_ylabel("Current Density [A/cm²]", fontsize=self.fontsize)
+        par1.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
 
         host.set_yscale('log')
         par1.set_yscale('log')
@@ -265,15 +267,15 @@ class AuswertungExtensionSingle():
 
     async def plot_save_sum_v(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        ax.set_title(title, fontsize=self.fontsize)
         # plt.ylim([10**-7, 10**-4])
 
         for led in led_list.leds:
             if not led.is_malfunctioning:
                 ax.plot(led.voltage_korr_array, led.current_soll_array, "k")
 
-        ax.set_xlabel("Voltage [V]")
-        ax.set_ylabel("Current [A]")
+        ax.set_xlabel("Voltage [V]", fontsize=self.fontsize)
+        ax.set_ylabel("Current [A]", fontsize=self.fontsize)
 
         plt.xlim([self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end])
 
@@ -284,8 +286,8 @@ class AuswertungExtensionSingle():
                 ax2.plot(led.voltage_korr_array, led.op_power_array, 'b')
 
         ax2.grid(False)
-        ax2.set_xlabel("Voltage [V]")
-        ax2.set_ylabel("Opt. Power [W]")
+        ax2.set_xlabel("Voltage [V]", fontsize=self.fontsize)
+        ax2.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
 
