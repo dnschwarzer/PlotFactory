@@ -262,7 +262,7 @@ class Auswertung:
         ax.set_title(title)
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
-        ax.set_xlabel("P")
+        ax.set_xlabel("Current [A]")
         ax.set_ylabel("EQE")
         ax.grid(True)
 
@@ -273,6 +273,10 @@ class Auswertung:
     async def plot_save_f(self, file, led, title):
         array_x, array_y = led.p_array, led.eqe_array
 
+        idx_eqe = find_nearest(led.eqe_array, led.eqe_max)
+        array_x = array_x[idx_eqe:]
+        array_y = array_y[idx_eqe:]
+
         sqrt_p_array = []
         sqrt_p_inv_array = []
         for val in array_x:
@@ -280,11 +284,21 @@ class Auswertung:
             sqrt_p_inv_array.append(1.0/math.sqrt(val))
 
         array_x = np.add(sqrt_p_array, sqrt_p_inv_array)
-        array_y = led.eqe_max / led.eqe_array
+        array_y = led.eqe_max / array_y
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
+
+        if len(array_x) > 0:
+            end_idx = find_nearest(array_x, 4)
+            x = array_x[:end_idx]
+            y = array_y[:end_idx]
+
+            if not len(x) <= 0:
+                p = np.polyfit(x, y, 1)
+                eqe_fitted_array = np.polyval(p, array_x)
+                ax.scatter(array_x, eqe_fitted_array, marker='o', c='red')
+
         ax.plot(array_x, array_y, "k")
-      #  ax.set_xscale('log')
         ax.set_xlabel("sqrt(P) + 1/sqrt(P)")
         ax.set_ylabel("EQE_max / EQE")
         ax.grid(True)
