@@ -147,8 +147,10 @@ class Auswertung:
                         led.wpe_max) + " %, J_Max = " + str(led.j_max) + "A/cm²"
 
                     if self.do_pixel_plot:
-                        await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
+                      #  await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
+                      #  await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
                         self.single_plot_paths.clear()
 
 
@@ -178,7 +180,7 @@ class Auswertung:
                 await single.plot_save_c_avg(f"{folder}/{self.output_dir}/{file_footer}_c_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
                 await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
                 await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
-                await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
+                await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg",  footer, current_led_list)
 
                 # output path and filename for summary pdf
                 pdf_summary_path = f"{folder}/{self.output_dir}/summary_{file_footer}.pdf"
@@ -195,7 +197,7 @@ class Auswertung:
 
         # all measurements
         # sort for size
-        self.list_of_measurements.sort(key=lambda x: x.area, reverse=False)
+        self.list_of_measurements.sort(key=lambda x: x.area, reverse=True)
         multi = Multi(self.filepath, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
 
         if self.do_summary_plot:
@@ -251,6 +253,43 @@ class Auswertung:
         ax2.grid(False)
 
         file = file.replace(".csv", "_v.png")
+        fig.savefig(file)
+        self.single_plot_paths.append(file)
+
+    async def plot_save_e(self, file, led, title):
+        array_x, array_y = led.current_soll_array, led.eqe_array
+        fig, ax = plt.subplots(figsize=(18, 12))
+        ax.set_title(title)
+        ax.plot(array_x, array_y, "k")
+        ax.set_xscale('log')
+        ax.set_xlabel("P")
+        ax.set_ylabel("EQE")
+        ax.grid(True)
+
+        file = file.replace(".csv", "_e.png")
+        fig.savefig(file)
+        self.single_plot_paths.append(file)
+
+    async def plot_save_f(self, file, led, title):
+        array_x, array_y = led.p_array, led.eqe_array
+
+        sqrt_p_array = []
+        sqrt_p_inv_array = []
+        for val in array_x:
+            sqrt_p_array.append(math.sqrt(val))
+            sqrt_p_inv_array.append(1.0/math.sqrt(val))
+
+        array_x = np.add(sqrt_p_array, sqrt_p_inv_array)
+        array_y = led.eqe_max / led.eqe_array
+        fig, ax = plt.subplots(figsize=(18, 12))
+        ax.set_title(title)
+        ax.plot(array_x, array_y, "k")
+      #  ax.set_xscale('log')
+        ax.set_xlabel("sqrt(P) + 1/sqrt(P)")
+        ax.set_ylabel("EQE_max / EQE")
+        ax.grid(True)
+
+        file = file.replace(".csv", "_f.png")
         fig.savefig(file)
         self.single_plot_paths.append(file)
 

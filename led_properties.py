@@ -41,20 +41,27 @@ class LED:
 
         # calced data arrays
         self.wpe_array = []
+        self.eqe_array = []
+        self.eqe_fitted_array = []
         self.j_array = []
         self.wpe_ivl_array = []
+        self.p_array = []
+
 
         # calced data single
         self.op_power_current = 0
+        self.op_power_at_30mA = 0
         self.op_power_max = 0
         self.voltage_start_wpe_index = 0
         self.CurrentValue_Index = 0
         self.op_power_3_3v = 0
         self.i_3_3v = 0
+        self.i_at_eqe_max = 0
         self.wpe_current = 0
 
         # max
         self.wpe_max = 0
+        self.eqe_max = 0
         self.wpe_ivl_max = 0
         self.wpe_max_index = 0
         self.j_at_wpe_max = 0
@@ -96,6 +103,8 @@ class LED:
             self.is_malfunctioning = True
 
         self.voltage_start_wpe_index = find_nearest(self.voltage_korr_array, value=self.voltage_start_wpe)
+        idx_30mA = find_nearest(self.current_soll_array,  3.0 * 10 ** -5) # 30 mikro ampere
+        self.op_power_at_30mA = self.op_power_array[idx_30mA]
         self.wpe_max = max(self.wpe_array)
         self.wpe_max_index = find_nearest(self.wpe_array, value=self.wpe_max)
         self.j_at_wpe_max = self.j_array[self.wpe_max_index]
@@ -120,6 +129,26 @@ class LED:
         self.wpe_ivl_max = self.wpe_max / self.IVL_WPE_Collection
         self.i_max = self.current_soll_array[self.wpe_max_index]
         self.j_max = max(self.j_array)
+
+
+        # eqe, p etc
+        self.eqe_array = self.wpe_array
+        self.eqe_fitted_array = self.wpe_array
+        self.eqe_max = self.wpe_max
+
+        idx_eqe_max = find_nearest(self.eqe_array, max(self.eqe_array))
+        self.i_at_eqe_max = self.current_soll_array[idx_eqe_max]
+        self.p_array = self.current_soll_array / self.i_at_eqe_max
+
+        # fitting eqe
+        #start_idx = find_nearest(self.p_array, 2)
+        #end_idx = find_nearest(self.p_array, 3)
+        #x = self.p_array[start_idx:end_idx]
+        #y = self.eqe_array[start_idx:end_idx]
+        # scale is log, therefore log values
+        #logx, logy = np.log(x), np.log(y)
+        #p = np.polyfit(logx, logy, 8)
+        #self.eqe_fitted_array = np.exp(np.polyval(p, logx))
 
         # data for table
         voltage_3_3 = find_nearest(self.voltage_korr_array, value=3.3)

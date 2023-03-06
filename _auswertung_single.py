@@ -18,7 +18,7 @@ class AuswertungExtensionSingle():
         self.limit_x_axis_voltage_begin = limit_vol_beg
         self.limit_x_axis_voltage_end = limit_vol_end
         self.summary_plot_paths = summary
-        self.fontsize = 35
+        self.fontsize = 25
 
 
     async def plot_save_c_sum(self, file, title, led_list):
@@ -152,32 +152,43 @@ class AuswertungExtensionSingle():
         ax.scatter(led_list.current_density_array_mean, led_list.op_power_array_mean, s=4, linewidths=0.1,
                    color='black')
 
+        file1 = file.replace(".csv", "c_avg_opt.png")
+        file_name1 = file1.split("/")[-1]
+        path1 = f"{self.filepath}/Output/{file_name1}_1"
+        fig.savefig(path1)
+        self.summary_plot_paths.append(f"{path1}.png")
+
+
+
         # format ax2
-        ax2 = ax.twinx()
+        fig, ax2 = plt.subplots(figsize=(18, 12))
+        ax2.set_title(title, fontsize=self.fontsize)
+        plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
+        ax2.set_xscale('log')
 
         ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
         ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
-        ax2.yaxis.label.set_color('blue')
-        ax2.tick_params(axis='y', colors='blue')
-        ax2.grid(False)
+        ax2.grid(b=True, which='major', linestyle='-')
+        ax2.grid(b=True, which='minor', linestyle='--')
+        ax2.grid(True)
         from matplotlib.ticker import ScalarFormatter
         for axis in [ax2.xaxis, ax2.yaxis]:
             axis.set_major_formatter(ScalarFormatter())
 
         ax2.errorbar(led_list.current_density_array_mean, led_list.wpe_array_mean,
                      led_list.wpe_array_std,
-                     fmt=',', linewidth=0.5, color='blue',
+                     fmt=',', linewidth=0.5, color='black',
                      markersize=0.1, capthick=1, capsize=5,
                      markeredgewidth=1)
 
         ax2.scatter(led_list.current_density_array_mean, led_list.wpe_array_mean, s=4, linewidths=0.1,
-                    color='blue')
+                    color='black')
 
-        file = file.replace(".csv", "c_avg.png")
-        file_name = file.split("/")[-1]
-        path = f"{self.filepath}/Output/{file_name}"
-        fig.savefig(path)
-        self.summary_plot_paths.append(f"{path}.png")
+        file2 = file.replace(".csv", "c_avg_opt2.png")
+        file_name2 = file2.split("/")[-1]
+        path2 = f"{self.filepath}/Output/{file_name2}_2"
+        fig.savefig(path2)
+        self.summary_plot_paths.append(f"{path2}.png")
 
     async def plot_save_avg_v(self, file, title, led_list):
         fig, host = plt.subplots(figsize=(18, 12))

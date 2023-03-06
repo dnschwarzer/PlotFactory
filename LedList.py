@@ -15,6 +15,7 @@ class LedList:
         self.current_array = []
         self.current_density_array = []
         self.wpe_array = []
+        self.eqe_array = []
         self.j_array = []
         self.op_power_array = []
 
@@ -23,6 +24,7 @@ class LedList:
         self.current_array_std = []
         self.current_density_array_std = []
         self.wpe_array_std = []
+        self.eqe_array_std = []
         self.op_power_array_std = []
         self.j_array_std = []
 
@@ -31,6 +33,7 @@ class LedList:
         self.current_array_mean = []
         self.current_density_array_mean = []
         self.wpe_array_mean = []
+        self.eqe_array_mean = []
         self.op_power_array_mean = []
         self.j_array_mean = []
 
@@ -80,6 +83,7 @@ class LedList:
                 self.op_power_array.append(pixel.op_power_array)
                 self.current_density_array.append(pixel.current_density_array)
                 self.wpe_array.append(pixel.wpe_array)
+                self.eqe_array.append(pixel.eqe_array)
                 self.j_at_wpe_max.append(pixel.j_at_wpe_max)
                 self.j_array.append(pixel.j_array)
 
@@ -93,6 +97,7 @@ class LedList:
         tmp_current = []
         tmp_density = []
         tmp_wpe = []
+        tmp_eqe = []
         tmp_op_power = []
         tmp_j = []
 
@@ -105,6 +110,7 @@ class LedList:
                 tmp_current.append(led.current_soll_array[point])
                 tmp_density.append(led.current_density_array[point])
                 tmp_wpe.append(led.wpe_array[point])
+                tmp_eqe.append(led.eqe_array[point])
                 tmp_op_power.append(led.op_power_array[point])
                 tmp_j.append(led.j_array[point])
 
@@ -113,6 +119,7 @@ class LedList:
             self.current_array_std.append(np.std(tmp_current))
             self.current_density_array_std.append(np.std(tmp_density))
             self.wpe_array_std.append(np.std(tmp_wpe))
+            self.eqe_array_std.append(np.std(tmp_eqe))
             self.op_power_array_std.append(np.std(tmp_op_power))
             self.j_array_std.append(np.std(tmp_j))
 
@@ -121,6 +128,7 @@ class LedList:
             self.current_array_mean.append(np.mean(tmp_current))
             self.current_density_array_mean.append(np.mean(tmp_density))
             self.wpe_array_mean.append(np.mean(tmp_wpe))
+            self.eqe_array_mean.append(np.mean(tmp_eqe))
             self.op_power_array_mean.append(np.mean(tmp_op_power))
             self.j_array_mean.append(np.mean(tmp_j))
 
@@ -129,6 +137,7 @@ class LedList:
             tmp_current.clear()
             tmp_density.clear()
             tmp_wpe.clear()
+            tmp_eqe.clear()
             tmp_op_power.clear()
             tmp_j.clear()
 

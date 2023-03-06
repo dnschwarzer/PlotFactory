@@ -95,20 +95,32 @@ class PDF(FPDF):
         pdf.cell(0, 10, 'Overview', 0, 1, align='C')
         pdf.ln()
 
-        cell_width = 30
+        cell_width = 25
         cell_width_id = 15
         cell_height = 7
         cell_margin = 7
         pdf.set_font('helvetica', size=7)
         pdf.set_x(cell_margin)
-
         pdf.cell(cell_width, cell_height, f"", 1, 0, 'C')
-        pdf.cell(cell_width_id, cell_height, f"LED ID", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"J max [A/cm^2]", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"WPE max", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"J at WPE max [A/cm^2]", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"I 3.3 V [A]", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"op. Power 3.3 V [W]", 1, 0, 'C')
+
+        title_list = []
+        title_list.append("LED ID")
+        title_list.append("J max [A/cm²]")
+        title_list.append("WPE max")
+        title_list.append("J at WPE max [A/cm²]")
+        title_list.append("I 3.3 V [A]")
+        title_list.append("op. Power 3.3 V [W]")
+        title_list.append("op. Power 30µA [W]")
+
+        column_count = len(title_list)
+
+        for col in range(0, column_count):
+            if title_list[col] == "LED ID":
+                pdf.cell(cell_width_id, cell_height, title_list[col], 1, 0, 'C')
+            else:
+                pdf.cell(cell_width, cell_height, title_list[col], 1, 0, 'C')
+
+
         pdf.ln()
 
         for led in led_list.leds:
@@ -118,25 +130,16 @@ class PDF(FPDF):
             # second id cell
             pdf.cell(cell_width_id, cell_height, f"Q{led.led_no} ID{led.led_id}", 1, 0, 'C')
             if led.is_shorted and not led.is_open_circuit:
-                pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"short circuit", 1, 0, 'C')
+                for col in range(0, column_count - 1):
+                    pdf.cell(cell_width, cell_height, f"SC", 1, 0, 'C')
 
             elif led.is_open_circuit and not led.is_shorted:
-                pdf.cell(cell_width, cell_height, f"open circuit", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"OC", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"OC", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"OC", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"OC", 1, 0, 'C')
+                for col in range(0, column_count - 1):
+                    pdf.cell(cell_width, cell_height, f"OC", 1, 0, 'C')
 
             elif not led.is_open_circuit and not led.is_shorted and led.is_malfunctioning:
-                pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
+                for col in range(0, column_count - 1):
+                    pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
 
             else:
                 n = 3
@@ -145,6 +148,7 @@ class PDF(FPDF):
                 pdf.cell(cell_width, cell_height, f"{float(led.j_at_wpe_max):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.i_3_3v):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.op_power_3_3v):.{n}}", 1, 0, 'C')
+                pdf.cell(cell_width, cell_height, f"{float(led.op_power_at_30mA):.{n}}", 1, 0, 'C')
             pdf.ln()
 
         # summary and average table of overview
@@ -152,6 +156,7 @@ class PDF(FPDF):
         wpe_max = []
         i_3_3v = []
         op_power_3_3v = []
+        o_30mA = []
         for led in led_list.leds:
             # ignore malfunctioning leds
             if led.is_malfunctioning:
@@ -161,6 +166,7 @@ class PDF(FPDF):
             wpe_max.append(led.wpe_max)
             i_3_3v.append(led.i_3_3v)
             op_power_3_3v.append(led.op_power_3_3v)
+            o_30mA.append(led.op_power_at_30mA)
 
         # avg
         pdf.set_x(cell_margin)
@@ -171,6 +177,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"{led_list.j_at_wpe_max_mean:.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(i_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(op_power_3_3v):.{3}}", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"{np.mean(o_30mA):.{3}}", 1, 0, 'C')
         pdf.ln()
 
         # std deviation
@@ -182,6 +189,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"{led_list.j_at_wpe_max_std:.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(i_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(op_power_3_3v):.{3}}", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"{np.std(o_30mA):.{3}}", 1, 0, 'C')
         pdf.ln()
         pdf.ln()
 
