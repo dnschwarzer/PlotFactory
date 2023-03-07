@@ -130,27 +130,36 @@ class LED:
         self.i_max = self.current_soll_array[self.wpe_max_index]
         self.j_max = max(self.j_array)
 
-
         # eqe, p etc
         self.eqe_array = self.wpe_array
-        self.eqe_fitted_array = self.wpe_array
-        self.eqe_max = self.wpe_max
 
-        idx_eqe_max = find_nearest(self.eqe_array, max(self.eqe_array))
-        self.i_at_eqe_max = self.current_soll_array[idx_eqe_max]
+        # fitting eqe and get eqe max over current
+        self.eqe_fit_eqe_max()
+        self.get_i_at_eqe_max()
         self.p_array = self.current_soll_array / self.i_at_eqe_max
-
-        # fitting eqe
-        #start_idx = find_nearest(self.p_array, 2)
-        #end_idx = find_nearest(self.p_array, 3)
-        #x = self.p_array[start_idx:end_idx]
-        #y = self.eqe_array[start_idx:end_idx]
-        # scale is log, therefore log values
-        #logx, logy = np.log(x), np.log(y)
-        #p = np.polyfit(logx, logy, 8)
-        #self.eqe_fitted_array = np.exp(np.polyval(p, logx))
 
         # data for table
         voltage_3_3 = find_nearest(self.voltage_korr_array, value=3.3)
         self.i_3_3v = self.current_soll_array[voltage_3_3]
         self.op_power_3_3v = self.op_power_array[voltage_3_3]
+
+    def eqe_fit_eqe_max(self):
+        array_x, array_y = self.current_soll_array, self.eqe_array
+
+        idx_wpe_max = array_y.argmax(axis=0)
+        j_at_wpe_max = self.current_soll_array[idx_wpe_max] / self.led_area
+        n = 3
+        start_idx = find_nearest(self.j_array, j_at_wpe_max / n)
+        end_idx = find_nearest(self.j_array, j_at_wpe_max * n)
+        x = array_x[start_idx:end_idx]
+        y = array_y[start_idx:end_idx]
+        # scale is log, therefore log values
+        logx, logy = np.log(x), np.log(y)
+        p = np.polyfit(logx, logy, 8)
+        y_fit = np.exp(np.polyval(p, logx))
+
+        self.eqe_max = max(y_fit)
+
+    def get_i_at_eqe_max(self):
+        idx_eqe_max = find_nearest(self.eqe_array, self.eqe_max)
+        self.i_at_eqe_max = self.current_soll_array[idx_eqe_max]

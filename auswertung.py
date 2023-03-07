@@ -260,6 +260,20 @@ class Auswertung:
         array_x, array_y = led.current_soll_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
+
+        idx_wpe_max = array_y.argmax(axis=0)
+        j_at_wpe_max = led.current_soll_array[idx_wpe_max] / led.led_area
+        n = 3
+        start_idx = find_nearest(led.j_array, j_at_wpe_max / n)
+        end_idx = find_nearest(led.j_array, j_at_wpe_max * n)
+        x = array_x[start_idx:end_idx]
+        y = array_y[start_idx:end_idx]
+        # scale is log, therefore log values
+        logx, logy = np.log(x), np.log(y)
+        p = np.polyfit(logx, logy, 8)
+        y_fit = np.exp(np.polyval(p, logx))
+        ax.scatter(x, y_fit, c='blue')
+
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
         ax.set_xlabel("Current [A]")
@@ -273,18 +287,31 @@ class Auswertung:
     async def plot_save_f(self, file, led, title):
         array_x, array_y = led.p_array, led.eqe_array
 
+        # only values after wpe max
         idx_eqe = find_nearest(led.eqe_array, led.eqe_max)
+        array_x2 = led.p_array[:idx_eqe]
+        array_y2 = led.eqe_array[:idx_eqe]
+
         array_x = array_x[idx_eqe:]
         array_y = array_y[idx_eqe:]
 
         sqrt_p_array = []
         sqrt_p_inv_array = []
+        sqrt_p_inv_array2 = []
+        sqrt_p_array2 = []
+
+        for val in array_x2:
+            sqrt_p_array2.append(math.sqrt(val))
+            sqrt_p_inv_array2.append(1.0 / math.sqrt(val))
+
         for val in array_x:
             sqrt_p_array.append(math.sqrt(val))
             sqrt_p_inv_array.append(1.0/math.sqrt(val))
 
         array_x = np.add(sqrt_p_array, sqrt_p_inv_array)
+        array_x2 = np.add(sqrt_p_array2, sqrt_p_inv_array2)
         array_y = led.eqe_max / array_y
+        array_y2 = led.eqe_max / array_y2
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
 
@@ -299,6 +326,7 @@ class Auswertung:
                 ax.scatter(array_x, eqe_fitted_array, marker='o', c='red')
 
         ax.plot(array_x, array_y, "k")
+        ax.plot(array_x2, array_y2, "blue")
         ax.set_xlabel("sqrt(P) + 1/sqrt(P)")
         ax.set_ylabel("EQE_max / EQE")
         ax.grid(True)
