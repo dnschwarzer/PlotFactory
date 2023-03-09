@@ -152,8 +152,9 @@ class Auswertung:
                     if self.do_pixel_plot:
                       #  await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
                       #  await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
+                       # await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
+                      #  await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_iqe(f"{folder}/{self.output_dir}/{file}", led, title)
                         self.single_plot_paths.clear()
 
 
@@ -259,6 +260,7 @@ class Auswertung:
         fig.savefig(file)
         self.single_plot_paths.append(file)
 
+
     async def plot_save_e(self, file, led, title):
         array_x, array_y = led.current_soll_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
@@ -296,8 +298,34 @@ class Auswertung:
         fig.savefig(file)
         self.single_plot_paths.append(file)
 
-    def q_func(self, Q, x):
-        return (Q + x) / (Q + 2)
+    async def plot_save_iqe(self, file, led, title):
+        array_x, array_y = led.current_soll_array, led.eqe_array
+        fig, ax = plt.subplots(figsize=(18, 12))
+        ax.set_title(title)
+
+        plt.rcParams["figure.figsize"] = [7.50, 3.50]
+        plt.rcParams["figure.autolayout"] = True
+        delta = 0.01
+        A = led.iqe_max
+        B = led.j_at_wpe_max # j max ??
+        print(f"j max = {B}")
+        xrange = np.arange(0.1, 10 ** 4, 0.1)
+        yrange = np.arange(0, A + 0.1, delta)
+
+        x, y = np.meshgrid(xrange, yrange)
+        equation = 1 - (((1 - A) / (2 * x)) * (1 + (y * x) / (A * B)) * np.sqrt(y * x * B / A)) - y  # x = J, y = IQE
+        plt.contour(x, y, equation, [0])
+        plt.xscale("log")
+        plt.grid(b=True, which='major', linestyle='-')
+        plt.grid(b=True, which='minor', linestyle='--')
+
+        ax.set_xlabel("J [A/cm²]")
+        ax.set_ylabel("IQE")
+        ax.grid(True)
+
+        file = file.replace(".csv", "_iqe.png")
+        fig.savefig(file)
+        self.single_plot_paths.append(file)
 
     async def plot_save_f(self, file, led, title):
         if led.is_malfunctioning:
@@ -341,10 +369,6 @@ class Auswertung:
             y = array_y[:end_idx]
 
             if not len(x) <= 0 and np.isfinite(x).all() and np.isfinite(y).all():
-                p = np.polyfit(x, y, 1)
-                eqe_fitted_array = np.polyval(p, array_x)
-                #ax.scatter(array_x, eqe_fitted_array, marker='o', c='red')
-
                 q_func = lambda x_param, q: (q + x_param) / (q + 2)
                 popt, pcov = scipy.optimize.curve_fit(q_func, x, y)
                 # more x vals
