@@ -1,6 +1,7 @@
 import math
 import numpy as np
-
+import scipy.optimize as opt
+import scipy
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -58,6 +59,9 @@ class LED:
         self.i_3_3v = 0
         self.i_at_eqe_max = 0
         self.wpe_current = 0
+        self.iqe = 0
+        self.iqe_max = 0
+        self.q = 0
 
         # max
         self.wpe_max = 0
@@ -133,10 +137,11 @@ class LED:
         # eqe, p etc
         self.eqe_array = self.wpe_array
 
-        # fitting eqe and get eqe max over current
+        # fitting eqe and get eqe max over current, iqe
         self.eqe_fit_eqe_max()
         self.get_i_at_eqe_max()
         self.p_array = self.current_soll_array / self.i_at_eqe_max
+        self.get_iqe_fit()
 
         # data for table
         voltage_3_3 = find_nearest(self.voltage_korr_array, value=3.3)
@@ -156,10 +161,54 @@ class LED:
         # scale is log, therefore log values
         logx, logy = np.log(x), np.log(y)
         p = np.polyfit(logx, logy, 8)
-        y_fit = np.exp(np.polyval(p, logx))
+        x3 = np.linspace(x[0], x[-1], 80)
+        logx3 = np.log(x3)
+        y_fit = np.exp(np.polyval(p, logx3))
 
         self.eqe_max = max(y_fit)
 
     def get_i_at_eqe_max(self):
         idx_eqe_max = find_nearest(self.eqe_array, self.eqe_max)
         self.i_at_eqe_max = self.current_soll_array[idx_eqe_max]
+
+    def get_iqe_fit(self):
+        array_x, array_y = self.p_array, self.eqe_array
+
+        # only values after wpe max
+        idx_eqe = find_nearest(self.eqe_array, self.eqe_max)
+        array_x2 = self.p_array[:idx_eqe]
+        array_y2 = self.eqe_array[:idx_eqe]
+
+        array_x = array_x[idx_eqe:]
+        array_y = array_y[idx_eqe:]
+
+        sqrt_p_array = []
+        sqrt_p_inv_array = []
+        sqrt_p_inv_array2 = []
+        sqrt_p_array2 = []
+
+        for val in array_x2:
+            sqrt_p_array2.append(math.sqrt(val))
+            sqrt_p_inv_array2.append(1.0 / math.sqrt(val))
+
+        for val in array_x:
+            sqrt_p_array.append(math.sqrt(val))
+            sqrt_p_inv_array.append(1.0 / math.sqrt(val))
+
+        array_x = np.add(sqrt_p_array, sqrt_p_inv_array)
+        array_x2 = np.add(sqrt_p_array2, sqrt_p_inv_array2)
+        array_y = self.eqe_max / array_y
+
+        if len(array_x) > 0:
+            end_idx = find_nearest(array_x, 4)
+            x = array_x[:end_idx]
+            y = array_y[:end_idx]
+
+            if not len(x) <= 0 and np.isfinite(x).all() and np.isfinite(y).all():
+                q_func = lambda x_param, q: (q + x_param) / (q + 2)
+                popt, pcov = scipy.optimize.curve_fit(q_func, x, y)
+                # more x vals
+                xfine = np.linspace(array_x[0], array_x[-1], 100)
+                p_fitted = q_func(xfine, popt[0])
+                self.q = popt[0]
+                self.iqe_max = self.q / (self.q + 2)

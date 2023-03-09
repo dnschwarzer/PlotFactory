@@ -11,6 +11,9 @@ from numpy.polynomial import Polynomial
 import math
 from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
+import scipy.optimize as opt
+import scipy
+
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 params = {'legend.fontsize': 'x-large',
@@ -178,7 +181,7 @@ class Auswertung:
                 # plot the 4 summary plots
                 await single.plot_save_c_sum(f"{folder}/{self.output_dir}/{file_footer}_c_sum", "all LEDs " + footer, current_led_list)
                 await single.plot_save_c_avg(f"{folder}/{self.output_dir}/{file_footer}_c_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
-                await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
+                #await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
                 await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
                 await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg",  footer, current_led_list)
 
@@ -266,13 +269,22 @@ class Auswertung:
         n = 3
         start_idx = find_nearest(led.j_array, j_at_wpe_max / n)
         end_idx = find_nearest(led.j_array, j_at_wpe_max * n)
+
         x = array_x[start_idx:end_idx]
         y = array_y[start_idx:end_idx]
+
         # scale is log, therefore log values
         logx, logy = np.log(x), np.log(y)
         p = np.polyfit(logx, logy, 8)
+        x3 = np.linspace(x[0], x[-1], 80)
+        logx3 = np.log(x3)
+        y3 = np.exp(np.polyval(p, logx3))
+        ax.scatter(x3, y3, c='green')
+
+
+
         y_fit = np.exp(np.polyval(p, logx))
-        ax.scatter(x, y_fit, c='blue')
+        #ax.scatter(x, y_fit, c='blue')
 
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
@@ -284,8 +296,15 @@ class Auswertung:
         fig.savefig(file)
         self.single_plot_paths.append(file)
 
+    def q_func(self, Q, x):
+        return (Q + x) / (Q + 2)
+
     async def plot_save_f(self, file, led, title):
+        if led.is_malfunctioning:
+            return
+
         array_x, array_y = led.p_array, led.eqe_array
+
 
         # only values after wpe max
         idx_eqe = find_nearest(led.eqe_array, led.eqe_max)
@@ -316,18 +335,27 @@ class Auswertung:
         ax.set_title(title)
 
         if len(array_x) > 0:
-            end_idx = find_nearest(array_x, 4)
+
+            end_idx = find_nearest(array_x, 8)
             x = array_x[:end_idx]
             y = array_y[:end_idx]
 
-            if not len(x) <= 0:
+            if not len(x) <= 0 and np.isfinite(x).all() and np.isfinite(y).all():
                 p = np.polyfit(x, y, 1)
                 eqe_fitted_array = np.polyval(p, array_x)
-                ax.scatter(array_x, eqe_fitted_array, marker='o', c='red')
+                #ax.scatter(array_x, eqe_fitted_array, marker='o', c='red')
+
+                q_func = lambda x_param, q: (q + x_param) / (q + 2)
+                popt, pcov = scipy.optimize.curve_fit(q_func, x, y)
+                # more x vals
+                xfine = np.linspace(array_x[0], array_x[-1], 100)
+                y_fitted = q_func(xfine, popt[0])
+                print(f"LED: {led.led_no}  Q {popt[0]} pcov:{pcov[0]}")
+                ax.scatter(xfine, y_fitted, c='green')
 
         ax.plot(array_x, array_y, "k")
         ax.plot(array_x2, array_y2, "blue")
-        ax.set_xlabel("sqrt(P) + 1/sqrt(P)")
+        ax.set_xlabel(f"sqrt(P) + 1/sqrt(P)| fit param: x0:{x[0]}, x_end:{x[-1]}, Q={popt[0]}, covar={pcov[0]}, IQE_max ={(popt[0]/(popt[0]+2))*10**2}%")
         ax.set_ylabel("EQE_max / EQE")
         ax.grid(True)
 

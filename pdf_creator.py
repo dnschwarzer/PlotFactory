@@ -95,7 +95,7 @@ class PDF(FPDF):
         pdf.cell(0, 10, 'Overview', 0, 1, align='C')
         pdf.ln()
 
-        cell_width = 25
+        cell_width = 21
         cell_width_id = 15
         cell_height = 7
         cell_margin = 7
@@ -111,8 +111,11 @@ class PDF(FPDF):
         title_list.append("I 3.3 V [A]")
         title_list.append("op. Power 3.3 V [W]")
         title_list.append("op. Power 30µA [W]")
+        title_list.append("IQE max [%]")
 
         column_count = len(title_list)
+
+        pdf.set_font('helvetica', size=5)
 
         for col in range(0, column_count):
             if title_list[col] == "LED ID":
@@ -120,6 +123,7 @@ class PDF(FPDF):
             else:
                 pdf.cell(cell_width, cell_height, title_list[col], 1, 0, 'C')
 
+        pdf.set_font('helvetica', size=7)
 
         pdf.ln()
 
@@ -149,6 +153,7 @@ class PDF(FPDF):
                 pdf.cell(cell_width, cell_height, f"{float(led.i_3_3v):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.op_power_3_3v):.{n}}", 1, 0, 'C')
                 pdf.cell(cell_width, cell_height, f"{float(led.op_power_at_30mA):.{n}}", 1, 0, 'C')
+                pdf.cell(cell_width, cell_height, f"{float(led.iqe_max * 10 ** 2):.{n}}", 1, 0, 'C')
             pdf.ln()
 
         # summary and average table of overview
@@ -157,6 +162,7 @@ class PDF(FPDF):
         i_3_3v = []
         op_power_3_3v = []
         o_30mA = []
+        iqe_max = []
         for led in led_list.leds:
             # ignore malfunctioning leds
             if led.is_malfunctioning:
@@ -167,6 +173,7 @@ class PDF(FPDF):
             i_3_3v.append(led.i_3_3v)
             op_power_3_3v.append(led.op_power_3_3v)
             o_30mA.append(led.op_power_at_30mA)
+            iqe_max.append(led.iqe_max)
 
         # avg
         pdf.set_x(cell_margin)
@@ -178,6 +185,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"{np.mean(i_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(op_power_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.mean(o_30mA):.{3}}", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"{np.mean(iqe_max):.{3}}", 1, 0, 'C')
         pdf.ln()
 
         # std deviation
@@ -190,6 +198,7 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"{np.std(i_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(op_power_3_3v):.{3}}", 1, 0, 'C')
         pdf.cell(cell_width, cell_height, f"{np.std(o_30mA):.{3}}", 1, 0, 'C')
+        pdf.cell(cell_width, cell_height, f"{np.std(iqe_max):.{3}}", 1, 0, 'C')
         pdf.ln()
         pdf.ln()
 
