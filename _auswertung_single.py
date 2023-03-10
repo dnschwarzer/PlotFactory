@@ -137,7 +137,7 @@ class AuswertungExtensionSingle():
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize - 1)
         ax.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
@@ -166,7 +166,7 @@ class AuswertungExtensionSingle():
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax2.set_xscale('log')
 
-        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize - 1)
         ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.grid(b=True, which='major', linestyle='-')
         ax2.grid(b=True, which='minor', linestyle='--')
@@ -225,6 +225,7 @@ class AuswertungExtensionSingle():
 
         p2 = par1.errorbar(led_list.voltage_array_mean[idx:],
                            led_list.op_power_array_mean[idx:], led_list.op_power_array_std[idx:],
+                           led_list.voltage_array_std[idx:],
                            fmt=',', linewidth=0.5, color=par1_col,
                            markersize=0.1, capthick=1, capsize=5,
                            markeredgewidth=1)
@@ -235,6 +236,7 @@ class AuswertungExtensionSingle():
         p3 = par2.errorbar(led_list.voltage_array_mean[idx:],
                            led_list.current_density_array_mean[idx:],
                            led_list.current_density_array_std[idx:],
+                           led_list.voltage_array_std[idx:],
                            fmt=',', linewidth=0.5, color=par2_col,
                            markersize=0.1, capthick=1, capsize=5,
                            markeredgewidth=1)

@@ -62,6 +62,7 @@ class LED:
         self.iqe = 0
         self.iqe_max = 0
         self.q = 0
+        self.eqe_fit_coeff = 0
 
         # max
         self.wpe_max = 0
@@ -166,6 +167,7 @@ class LED:
         y_fit = np.exp(np.polyval(p, logx3))
 
         self.eqe_max = max(y_fit)
+        self.eqe_fit_coeff = p
 
     def get_i_at_eqe_max(self):
         idx_eqe_max = find_nearest(self.eqe_array, self.eqe_max)

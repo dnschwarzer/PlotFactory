@@ -21,6 +21,7 @@ def find_nearest(array, value):
 class AuswertungExtensionMulti():
 
     color_wheel = ["black", "blue", "red", "green", "yellow", "cyan", "magenta", "black", "black", "black", "black"]
+    marker_wheel = ["*", ",", "o", "v", ">", "s", "p", "1", "2", "3", "<", "^", "."]
 
     def __init__(self, filepath, limit_den_be, limit_den_end, limit_vol_beg, limit_vol_end, summary):
         self.filepath = filepath
@@ -42,7 +43,7 @@ class AuswertungExtensionMulti():
         return min(op_idx_li)
 
     async def plot_save_c_avg(self, file, title, led_lists):
-        fig, ax = plt.subplots(figsize=(18, 12))
+        fig, ax = plt.subplots(figsize=(24, 16))
         ax.set_title(title, fontsize=self.fontsize)
         plt.xlim([self.find_min_op(led_lists), self.limit_x_axis_density_end])
         ax.set_xscale('log')
@@ -57,7 +58,7 @@ class AuswertungExtensionMulti():
         for led_list in led_lists:
             first_led = led_list.leds[0]
             label = f"{round(first_led.LED_Dim_x * 10 ** 4)}µm"
-            ax.plot(led_list.current_density_array_mean, led_list.op_power_array_mean, self.color_wheel[color_cnt], label = label)
+            ax.plot(led_list.current_density_array_mean, led_list.op_power_array_mean, color="black", label = label, marker=self.marker_wheel[color_cnt], markersize="8")
             color_cnt = color_cnt + 1
 
         plt.legend(loc="upper left")
@@ -67,7 +68,7 @@ class AuswertungExtensionMulti():
         fig.savefig(path1)
 
         # format ax2
-        fig, ax2 = plt.subplots(figsize=(18, 12))
+        fig, ax2 = plt.subplots(figsize=(24, 16))
         ax2.set_title(title, fontsize=self.fontsize)
         plt.xlim([self.find_min_op(led_lists), self.limit_x_axis_density_end])
         ax2.set_xscale('log')
@@ -86,7 +87,7 @@ class AuswertungExtensionMulti():
         for led_list in led_lists:
             first_led = led_list.leds[0]
             label = f"{round(first_led.LED_Dim_x * 10 ** 4)}µm"
-            ax2.plot(led_list.current_density_array_mean, led_list.wpe_array_mean, self.color_wheel[color_cnt], label=label)
+            ax2.plot(led_list.current_density_array_mean, led_list.wpe_array_mean, color="black", label=label, marker=self.marker_wheel[color_cnt], markersize="8")
             color_cnt = color_cnt + 1
 
         ax2.set_ylim(bottom=0)

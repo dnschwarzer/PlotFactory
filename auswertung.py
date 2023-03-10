@@ -150,10 +150,10 @@ class Auswertung:
                         led.wpe_max) + " %, J_Max = " + str(led.j_max) + "A/cm²"
 
                     if self.do_pixel_plot:
-                      #  await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
-                      #  await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
-                       # await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
-                      #  await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
+                        await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
                         await self.plot_save_iqe(f"{folder}/{self.output_dir}/{file}", led, title)
                         self.single_plot_paths.clear()
 
@@ -261,6 +261,7 @@ class Auswertung:
         self.single_plot_paths.append(file)
 
 
+
     async def plot_save_e(self, file, led, title):
         array_x, array_y = led.current_soll_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
@@ -299,7 +300,7 @@ class Auswertung:
         self.single_plot_paths.append(file)
 
     async def plot_save_iqe(self, file, led, title):
-        array_x, array_y = led.current_soll_array, led.eqe_array
+        array_x, array_y = led.j_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
         ax.set_title(title)
 
@@ -307,14 +308,15 @@ class Auswertung:
         plt.rcParams["figure.autolayout"] = True
         delta = 0.01
         A = led.iqe_max
-        B = led.j_at_wpe_max # j max ??
+        B = led.j_at_wpe_max
         print(f"j max = {B}")
-        xrange = np.arange(0.1, 10 ** 4, 0.1)
-        yrange = np.arange(0, A + 0.1, delta)
+
+        xrange = np.geomspace(0.1, 10 ** 5, 50)
+        yrange = np.geomspace(0.01, A + 0.1, 50)
 
         x, y = np.meshgrid(xrange, yrange)
         equation = 1 - (((1 - A) / (2 * x)) * (1 + (y * x) / (A * B)) * np.sqrt(y * x * B / A)) - y  # x = J, y = IQE
-        plt.contour(x, y, equation, [0])
+        plt.contour(x, y, equation, [0], colors="black")
         plt.xscale("log")
         plt.grid(b=True, which='major', linestyle='-')
         plt.grid(b=True, which='minor', linestyle='--')
@@ -322,6 +324,20 @@ class Auswertung:
         ax.set_xlabel("J [A/cm²]")
         ax.set_ylabel("IQE")
         ax.grid(True)
+        ax.set_ylim([0, led.iqe_max])
+
+        y_fit = np.polyval(led.eqe_fit_coeff, xrange)
+        print(f"eqe p : {led.eqe_fit_coeff}")
+
+        ax2 = ax.twinx()
+        ax2.plot(array_x, array_y, 'b')
+        ax2.set_xscale('log')
+        ax2.set_xlabel("J [A/cm²]")
+        ax2.set_ylabel("EQE")
+        ax2.yaxis.label.set_color('blue')
+        ax2.tick_params(axis='y', colors='blue')
+        ax2.grid(False)
+        ax2.set_ylim([0, max(array_y)])
 
         file = file.replace(".csv", "_iqe.png")
         fig.savefig(file)
