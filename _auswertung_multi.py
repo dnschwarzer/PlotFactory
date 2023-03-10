@@ -54,6 +54,9 @@ class AuswertungExtensionMulti():
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
         color_cnt = 0
+        from matplotlib.ticker import ScalarFormatter
+        for axis in [ax.xaxis, ax.yaxis]:
+            axis.set_major_formatter(ScalarFormatter())
 
         for led_list in led_lists:
             first_led = led_list.leds[0]
@@ -79,7 +82,6 @@ class AuswertungExtensionMulti():
         ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
         ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
 
-        from matplotlib.ticker import ScalarFormatter
         for axis in [ax2.xaxis, ax2.yaxis]:
             axis.set_major_formatter(ScalarFormatter())
 
