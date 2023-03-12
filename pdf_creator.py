@@ -3,6 +3,7 @@ import pathlib
 import os
 import numpy as np
 import LedList
+import PySimpleGUI as sg
 
 class PDF(FPDF):
 
@@ -146,14 +147,19 @@ class PDF(FPDF):
                     pdf.cell(cell_width, cell_height, f"ME", 1, 0, 'C')
 
             else:
-                n = 3
-                pdf.cell(cell_width, cell_height, f"{float(led.j_max):.{n}}", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"{float(led.wpe_max):.{n}}", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"{float(led.j_at_wpe_max):.{n}}", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"{float(led.i_3_3v):.{n}}", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"{float(led.op_power_3_3v):.{n}}", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"{float(led.op_power_at_30mA):.{n}}", 1, 0, 'C')
-                pdf.cell(cell_width, cell_height, f"{float(led.iqe_max * 10 ** 2):.{n}}", 1, 0, 'C')
+                val_table = [
+                    led.j_max,
+                    led.wpe_max,
+                    led.j_at_wpe_max,
+                    led.i_3_3v,
+                    led.op_power_3_3v,
+                    led.op_power_at_30mA,
+                    led.iqe_max * 10 ** 2,
+                ]
+                decimals = 3
+                for val in val_table:
+                    pdf.cell(cell_width, cell_height, f"{float(val):.{decimals}}", 1, 0, 'C')
+
             pdf.ln()
 
         # summary and average table of overview
@@ -216,7 +222,11 @@ class PDF(FPDF):
         pdf.cell(cell_width, cell_height, f"{led_list.is_shorted_cnt + led_list.is_open_circuit_cnt}", 1, 0, 'C')
         ###################################################
 
-        pdf.output(file_path)
+        try:
+            pdf.output(file_path)
+        except PermissionError:
+            sg.Popup("pdf already open, close pdf and click ok")
+            pdf.output(file_path)
 
 
 def isfloat(num):
