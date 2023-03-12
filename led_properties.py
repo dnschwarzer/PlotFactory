@@ -7,12 +7,13 @@ import auswertung_helper as static_m
 
 class LED:
 
-    def __init__(self, led_no, led_area, led_id):
+    def __init__(self, led_no, led_area, led_id, date_time):
         self.led_no = led_no
         self.led_id = led_id
         self.led_area = led_area * 10 ** (-8)  # cm²
         self.LED_Dim_x = math.sqrt(self.led_area)
         self.LED_Dim_y = math.sqrt(self.led_area)
+        self.date_time = date_time
 
         # led properties
         self.is_init = False

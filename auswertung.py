@@ -8,19 +8,9 @@ import LedList
 from _auswertung_single import AuswertungExtensionSingle as Single
 from _auswertung_multi import AuswertungExtensionMulti as Multi
 import math
-import scipy.optimize as opt
-import scipy
 import auswertung_helper as static_m
-
 import matplotlib.pyplot as plt
-import matplotlib.pylab as pylab
-params = {'legend.fontsize': 'x-large',
-          'figure.figsize': (15, 5),
-         'axes.labelsize': 'x-large',
-         'axes.titlesize':'x-large',
-         'xtick.labelsize':'x-large',
-         'ytick.labelsize':'x-large'}
-pylab.rcParams.update(params)
+
 
 def format_e(n):
     a = '%E' % n
@@ -88,7 +78,7 @@ class Auswertung:
                     led_id = int(measure_meta_split[1].replace("Id", ""))
                     edge_length = float(measure_meta_split[2].replace("D", ""))
                     led_area = edge_length * edge_length
-                    led = led_properties.LED(led_no, led_area, led_id)
+                    led = led_properties.LED(led_no, led_area, led_id, date_time)
 
                     with open(f'{folder}/{file}', 'r') as f:
                         next(f)
@@ -193,7 +183,7 @@ class Auswertung:
         multi = Multi(self.filepath, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
 
         if self.do_summary_plot:
-            await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "all sizes ", self.list_of_measurements)
+            await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
             await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
 
         return "finished"
@@ -210,8 +200,9 @@ class Auswertung:
         ax.set_xlabel("Current density [A/cm²]")
         ax.set_yscale('log')
         ax.set_ylabel("Opt. Power [W]")
-        ax.grid(b=True, which='major', linestyle='-')
-        ax.grid(b=True, which='minor', linestyle='--')
+        ax.grid(which='major', linestyle='-')
+        ax.grid(which='minor', linestyle='--')
+        ax.grid(True)
         static_m.scalar_formatter(ax)
         ax2 = ax.twinx()
         ax2.plot(array_x, array2_y, 'b')
@@ -304,8 +295,8 @@ class Auswertung:
         equation = 1 - (((1 - A) / (2 * x)) * (1 + (y * x) / (A * B)) * np.sqrt(y * x * B / A)) - y  # x = J, y = IQE
         plt.contour(x, y, equation, [0], colors="black")
         plt.xscale("log")
-        plt.grid(b=True, which='major', linestyle='-')
-        plt.grid(b=True, which='minor', linestyle='--')
+        plt.grid(which='major', linestyle='-')
+        plt.grid(which='minor', linestyle='--')
 
         ax.set_xlabel("J [A/cm²]")
         ax.set_ylabel("IQE")
