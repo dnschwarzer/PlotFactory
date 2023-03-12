@@ -1,11 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
+import auswertung_helper as static_m
 
 
 class AuswertungExtensionSingle():
@@ -20,10 +15,9 @@ class AuswertungExtensionSingle():
         self.summary_plot_paths = summary
         self.fontsize = 25
 
-
     async def plot_save_c_sum(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -45,9 +39,7 @@ class AuswertungExtensionSingle():
             ax2.plot(led.current_density_array, led.wpe_array, 'b')
 
         ax2.set_xscale('log')
-        from matplotlib.ticker import ScalarFormatter
-        for axis in [ax2.xaxis, ax2.yaxis]:
-            axis.set_major_formatter(ScalarFormatter())
+        static_m.scalar_formatter(ax2)
         ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
         ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
@@ -64,7 +56,7 @@ class AuswertungExtensionSingle():
         fig, ax = plt.subplots(figsize=(18, 12))
 
         # format ax 1
-        ax.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
         ax.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
@@ -79,7 +71,7 @@ class AuswertungExtensionSingle():
         wpe_array = np.array(self.led_list.wpe_array_mean)
 
         # limit for ax
-        idx_density_start = find_nearest(current_density, self.limit_x_axis_density_begin)
+        idx_density_start = static_m.find_nearest(current_density, self.limit_x_axis_density_begin)
 
         x = current_density[idx_density_start:]
         y = op_power[idx_density_start:]
@@ -93,8 +85,8 @@ class AuswertungExtensionSingle():
         idx_wpe_max = wpe_array.argmax(axis=0)
         j_at_wpe_max = self.led_list.current_array_mean[idx_wpe_max] / self.led_list.leds[0].led_area
         n = 3
-        start_idx = find_nearest(self.led_list.j_array_mean, j_at_wpe_max / n)
-        end_idx = find_nearest(self.led_list.j_array_mean, j_at_wpe_max * n)
+        start_idx = static_m.find_nearest(self.led_list.j_array_mean, j_at_wpe_max / n)
+        end_idx = static_m.find_nearest(self.led_list.j_array_mean, j_at_wpe_max * n)
         print(
             f"start index = {start_idx} J = {self.led_list.current_array_mean[start_idx] / self.led_list.leds[0].led_area} A/cm^2")
         print(
@@ -120,9 +112,8 @@ class AuswertungExtensionSingle():
         ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
-        from matplotlib.ticker import ScalarFormatter
-        for axis in [ax2.xaxis, ax2.yaxis]:
-            axis.set_major_formatter(ScalarFormatter())
+        static_m.scalar_formatter(ax2)
+
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
         file = file.replace(".csv", "c_fit.png")
@@ -133,7 +124,7 @@ class AuswertungExtensionSingle():
 
     async def plot_save_c_avg(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -142,6 +133,7 @@ class AuswertungExtensionSingle():
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
+        static_m.scalar_formatter(ax)
 
         ax.errorbar(led_list.current_density_array_mean,
                     led_list.op_power_array_mean, led_list.op_power_array_std,
@@ -158,11 +150,9 @@ class AuswertungExtensionSingle():
         fig.savefig(path1)
         self.summary_plot_paths.append(f"{path1}.png")
 
-
-
         # format ax2
         fig, ax2 = plt.subplots(figsize=(18, 12))
-        ax2.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax2, self.fontsize)
         plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax2.set_xscale('log')
 
@@ -171,9 +161,7 @@ class AuswertungExtensionSingle():
         ax2.grid(b=True, which='major', linestyle='-')
         ax2.grid(b=True, which='minor', linestyle='--')
         ax2.grid(True)
-        from matplotlib.ticker import ScalarFormatter
-        for axis in [ax2.xaxis, ax2.yaxis]:
-            axis.set_major_formatter(ScalarFormatter())
+        static_m.scalar_formatter(ax2)
 
         ax2.errorbar(led_list.current_density_array_mean, led_list.wpe_array_mean,
                      led_list.wpe_array_std,
@@ -211,7 +199,7 @@ class AuswertungExtensionSingle():
         par2.yaxis.set_label_position('left')
         par2.yaxis.set_ticks_position('left')
 
-        idx = find_nearest(led_list.current_array_mean, 10 ** -6)
+        idx = static_m.find_nearest(led_list.current_array_mean, 10 ** -6)
         idx = 0
 
         p1 = host.errorbar(led_list.voltage_array_mean[idx:],
@@ -280,7 +268,7 @@ class AuswertungExtensionSingle():
 
     async def plot_save_sum_v(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         # plt.ylim([10**-7, 10**-4])
 
         for led in led_list.leds:

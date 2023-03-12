@@ -1,21 +1,5 @@
-import os
-import csv
-import numpy as np
 import matplotlib.pyplot as plt
-import pdf_creator as pdfc
-import led_properties
-import LedList as ll
-from numpy.polynomial import Polynomial
-import math
-from mpl_toolkits.axes_grid1 import host_subplot
-import mpl_toolkits.axisartist as AA
-import matplotlib.pyplot as plt
-
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
+import auswertung_helper as static_m
 
 
 class AuswertungExtensionMulti():
@@ -44,7 +28,7 @@ class AuswertungExtensionMulti():
 
     async def plot_save_c_avg(self, file, title, led_lists):
         fig, ax = plt.subplots(figsize=(24, 16))
-        ax.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         plt.xlim([self.find_min_op(led_lists), self.limit_x_axis_density_end])
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -54,9 +38,7 @@ class AuswertungExtensionMulti():
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
         color_cnt = 0
-        from matplotlib.ticker import ScalarFormatter
-        for axis in [ax.xaxis, ax.yaxis]:
-            axis.set_major_formatter(ScalarFormatter())
+        static_m.scalar_formatter(ax)
 
         for led_list in led_lists:
             first_led = led_list.leds[0]
@@ -72,7 +54,7 @@ class AuswertungExtensionMulti():
 
         # format ax2
         fig, ax2 = plt.subplots(figsize=(24, 16))
-        ax2.set_title(title, fontsize=self.fontsize)
+        static_m.format_plot(plt, title, ax2, self.fontsize)
         plt.xlim([self.find_min_op(led_lists), self.limit_x_axis_density_end])
         ax2.set_xscale('log')
         ax2.grid(b=True, which='major', linestyle='-')
@@ -81,9 +63,7 @@ class AuswertungExtensionMulti():
 
         ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
         ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
-
-        for axis in [ax2.xaxis, ax2.yaxis]:
-            axis.set_major_formatter(ScalarFormatter())
+        static_m.scalar_formatter(ax2)
 
         color_cnt = 0
         for led_list in led_lists:
@@ -103,7 +83,7 @@ class AuswertungExtensionMulti():
 
     async def plot_allsizes_wpemax(self, file, title, led_lists):
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        static_m.format_plot(plt, title, ax, self.fontsize)
        # plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
        # ax.set_yscale('log')
@@ -112,10 +92,7 @@ class AuswertungExtensionMulti():
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
         ax.grid(True)
-
-        from matplotlib.ticker import ScalarFormatter
-        for axis in [ax.xaxis, ax.yaxis]:
-            axis.set_major_formatter(ScalarFormatter())
+        static_m.scalar_formatter(ax)
 
         color_cnt = 0
         for led_list in led_lists:

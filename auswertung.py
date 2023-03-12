@@ -7,12 +7,10 @@ import led_properties
 import LedList
 from _auswertung_single import AuswertungExtensionSingle as Single
 from _auswertung_multi import AuswertungExtensionMulti as Multi
-from numpy.polynomial import Polynomial
 import math
-from mpl_toolkits.axes_grid1 import host_subplot
-import mpl_toolkits.axisartist as AA
 import scipy.optimize as opt
 import scipy
+import auswertung_helper as static_m
 
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
@@ -23,13 +21,6 @@ params = {'legend.fontsize': 'x-large',
          'xtick.labelsize':'x-large',
          'ytick.labelsize':'x-large'}
 pylab.rcParams.update(params)
-
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
 
 def format_e(n):
     a = '%E' % n
@@ -55,6 +46,7 @@ class Auswertung:
         self.do_pixel_plot = do_pixel_plot
         self.do_array_plot = do_array_plot
         self.do_summary_plot = do_summary_plot
+        self.fontsize = 25
 
     async def build(self) -> str:
         return await self.plot(self.filepath)
@@ -210,13 +202,12 @@ class Auswertung:
 
         return "finished"
 
-
     async def plot_save_c(self, file, led, title):
         array_x, array_y, array2_y = led.current_density_array[led.voltage_start_wpe_index:], \
                                      led.op_power_array[led.voltage_start_wpe_index:], \
                                      led.wpe_array[led.voltage_start_wpe_index:]
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -225,6 +216,7 @@ class Auswertung:
         ax.set_ylabel("Opt. Power [W]")
         ax.grid(b=True, which='major', linestyle='-')
         ax.grid(b=True, which='minor', linestyle='--')
+        static_m.scalar_formatter(ax)
         ax2 = ax.twinx()
         ax2.plot(array_x, array2_y, 'b')
         ax2.set_xscale('log')
@@ -233,6 +225,8 @@ class Auswertung:
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
+        static_m.scalar_formatter(ax2)
+
 
         file = file.replace(".csv", "_c.png")
         fig.savefig(file)
@@ -241,7 +235,7 @@ class Auswertung:
     async def plot_save_v(self, file, led, title):
         array_x, array_y, array2_y = led.voltage_korr_array, led.current_soll_array, led.op_power_array
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        static_m.format_plot(plt, title, ax, self.fontsize)
         ax.plot(array_x, array_y, "k")
         ax.set_yscale('log')
         ax.set_xlabel("Voltage [V]")
@@ -260,18 +254,16 @@ class Auswertung:
         fig.savefig(file)
         self.single_plot_paths.append(file)
 
-
-
     async def plot_save_e(self, file, led, title):
         array_x, array_y = led.current_soll_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        static_m.format_plot(plt, title, ax, self.fontsize)
 
         idx_wpe_max = array_y.argmax(axis=0)
         j_at_wpe_max = led.current_soll_array[idx_wpe_max] / led.led_area
         n = 3
-        start_idx = find_nearest(led.j_array, j_at_wpe_max / n)
-        end_idx = find_nearest(led.j_array, j_at_wpe_max * n)
+        start_idx = static_m.find_nearest(led.j_array, j_at_wpe_max / n)
+        end_idx = static_m.find_nearest(led.j_array, j_at_wpe_max * n)
 
         x = array_x[start_idx:end_idx]
         y = array_y[start_idx:end_idx]
@@ -284,10 +276,8 @@ class Auswertung:
         y3 = np.exp(np.polyval(p, logx3))
         ax.scatter(x3, y3, c='green')
 
-
-
         y_fit = np.exp(np.polyval(p, logx))
-        #ax.scatter(x, y_fit, c='blue')
+        # ax.scatter(x, y_fit, c='blue')
 
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
@@ -302,7 +292,7 @@ class Auswertung:
     async def plot_save_iqe(self, file, led, title):
         array_x, array_y = led.j_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        static_m.format_plot(plt, title, ax, self.fontsize)
 
         plt.rcParams["figure.figsize"] = [7.50, 3.50]
         plt.rcParams["figure.autolayout"] = True
@@ -338,6 +328,8 @@ class Auswertung:
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
         ax2.set_ylim([0, max(array_y)])
+        static_m.scalar_formatter(ax2)
+
 
         file = file.replace(".csv", "_iqe.png")
         fig.savefig(file)
@@ -348,10 +340,8 @@ class Auswertung:
             return
 
         array_x, array_y = led.p_array, led.eqe_array
-
-
         # only values after wpe max
-        idx_eqe = find_nearest(led.eqe_array, led.eqe_max)
+        idx_eqe = static_m.find_nearest(led.eqe_array, led.eqe_max)
         array_x2 = led.p_array[:idx_eqe]
         array_y2 = led.eqe_array[:idx_eqe]
 
@@ -380,7 +370,7 @@ class Auswertung:
 
         if len(array_x) > 0:
 
-            end_idx = find_nearest(array_x, 8)
+            end_idx = static_m.find_nearest(array_x, 8)
             x = array_x[:end_idx]
             y = array_y[:end_idx]
 
@@ -392,6 +382,8 @@ class Auswertung:
                 y_fitted = q_func(xfine, popt[0])
                 # print(f"LED: {led.led_no}  Q {popt[0]} pcov:{pcov[0]}")
                 ax.scatter(xfine, y_fitted, c='green')
+
+        static_m.scalar_formatter(ax)
 
         ax.plot(array_x, array_y, "k")
         ax.plot(array_x2, array_y2, "blue")

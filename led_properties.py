@@ -2,12 +2,7 @@ import math
 import numpy as np
 import scipy.optimize as opt
 import scipy
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
+import auswertung_helper as static_m
 
 class LED:
 
@@ -107,13 +102,13 @@ class LED:
             self.is_shorted = True
             self.is_malfunctioning = True
 
-        self.voltage_start_wpe_index = find_nearest(self.voltage_korr_array, value=self.voltage_start_wpe)
-        idx_30mA = find_nearest(self.current_soll_array,  3.0 * 10 ** -5) # 30 mikro ampere
+        self.voltage_start_wpe_index = static_m.find_nearest(self.voltage_korr_array, value=self.voltage_start_wpe)
+        idx_30mA = static_m.find_nearest(self.current_soll_array,  3.0 * 10 ** -5) # 30 mikro ampere
         self.op_power_at_30mA = self.op_power_array[idx_30mA]
         self.wpe_max = max(self.wpe_array)
-        self.wpe_max_index = find_nearest(self.wpe_array, value=self.wpe_max)
+        self.wpe_max_index = static_m.find_nearest(self.wpe_array, value=self.wpe_max)
         self.j_at_wpe_max = self.j_array[self.wpe_max_index]
-        self.CurrentValue_Index = find_nearest(self.current_soll_array, value=self.current_value)
+        self.CurrentValue_Index = static_m.find_nearest(self.current_soll_array, value=self.current_value)
 
         if self.is_malfunctioning:
             wpe_at_current_index = 0
@@ -145,7 +140,7 @@ class LED:
         self.get_iqe_fit()
 
         # data for table
-        voltage_3_3 = find_nearest(self.voltage_korr_array, value=3.3)
+        voltage_3_3 = static_m.find_nearest(self.voltage_korr_array, value=3.3)
         self.i_3_3v = self.current_soll_array[voltage_3_3]
         self.op_power_3_3v = self.op_power_array[voltage_3_3]
 
@@ -155,8 +150,8 @@ class LED:
         idx_wpe_max = array_y.argmax(axis=0)
         j_at_wpe_max = self.current_soll_array[idx_wpe_max] / self.led_area
         n = 3
-        start_idx = find_nearest(self.j_array, j_at_wpe_max / n)
-        end_idx = find_nearest(self.j_array, j_at_wpe_max * n)
+        start_idx = static_m.find_nearest(self.j_array, j_at_wpe_max / n)
+        end_idx = static_m.find_nearest(self.j_array, j_at_wpe_max * n)
         x = array_x[start_idx:end_idx]
         y = array_y[start_idx:end_idx]
         # scale is log, therefore log values
@@ -173,14 +168,14 @@ class LED:
         self.eqe_fit_coeff = p
 
     def get_i_at_eqe_max(self):
-        idx_eqe_max = find_nearest(self.eqe_array, self.eqe_max)
+        idx_eqe_max = static_m.find_nearest(self.eqe_array, self.eqe_max)
         self.i_at_eqe_max = self.current_soll_array[idx_eqe_max]
 
     def get_iqe_fit(self):
         array_x, array_y = self.p_array, self.eqe_array
 
         # only values after wpe max
-        idx_eqe = find_nearest(self.eqe_array, self.eqe_max)
+        idx_eqe = static_m.find_nearest(self.eqe_array, self.eqe_max)
         array_x2 = self.p_array[:idx_eqe]
         array_y2 = self.eqe_array[:idx_eqe]
 
@@ -205,7 +200,7 @@ class LED:
         array_y = self.eqe_max / array_y
 
         if len(array_x) > 0:
-            end_idx = find_nearest(array_x, 4)
+            end_idx = static_m.find_nearest(array_x, 4)
             x = array_x[:end_idx]
             y = array_y[:end_idx]
 
