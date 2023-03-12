@@ -58,6 +58,7 @@ class LED:
         self.iqe = 0
         self.iqe_max = 0
         self.q = 0
+        self.q_cov = 0
         self.eqe_fit_coeff = 0
 
         # max
@@ -74,6 +75,9 @@ class LED:
         self.nits_current_FF = 0
         self.nits_max_FF = 0
         self.nits_current = 0
+
+        # fit func
+        self.q_func = lambda x_param, q: (q + x_param) / (q + 2)
 
     def add_data(self, vol_mess, vol_korr, current_soll, current_dens, op_power):
         self.voltage_mess_array = np.asarray(vol_mess)
@@ -147,7 +151,7 @@ class LED:
     def eqe_fit_eqe_max(self):
         array_x, array_y = self.current_soll_array, self.eqe_array
 
-        idx_wpe_max = array_y.argmax(axis=0)
+        idx_wpe_max = self.wpe_array.argmax(axis=0)
         j_at_wpe_max = self.current_soll_array[idx_wpe_max] / self.led_area
         n = 3
         start_idx = static_m.find_nearest(self.j_array, j_at_wpe_max / n)
@@ -160,9 +164,6 @@ class LED:
         x_fine = np.linspace(x[0], x[-1], 80)
         logx3 = np.log(x_fine)
         y_fit = np.exp(np.polyval(p, logx3))
-
-        print(f"wpe max: {max(self.eqe_array)}")
-        print(f"fit max: {max(y_fit)}")
 
         self.eqe_max = max(y_fit)
         self.eqe_fit_coeff = p
@@ -210,4 +211,5 @@ class LED:
                 xfine = np.linspace(array_x[0], array_x[-1], 100)
                 p_fitted = q_func(xfine, popt[0])
                 self.q = popt[0]
+                self.q_cov = pcov
                 self.iqe_max = self.q / (self.q + 2)

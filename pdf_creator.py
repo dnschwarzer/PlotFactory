@@ -181,30 +181,31 @@ class PDF(FPDF):
             o_30mA.append(led.op_power_at_30mA)
             iqe_max.append(led.iqe_max)
 
+        val_table = [
+            j_max,
+            wpe_max,
+            led_list.j_at_wpe_max_mean,
+            i_3_3v,
+            op_power_3_3v,
+            o_30mA,
+            iqe_max * 10 ** 2,
+        ]
+        decimals = 3
+
         # avg
         pdf.set_x(cell_margin)
         pdf.cell(cell_width, cell_height, f"arithmetic mean", 1, 0, 'C')
         pdf.cell(cell_width_id, cell_height, f"", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.mean(j_max):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.mean(wpe_max):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{led_list.j_at_wpe_max_mean:.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.mean(i_3_3v):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.mean(op_power_3_3v):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.mean(o_30mA):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.mean(iqe_max):.{3}}", 1, 0, 'C')
+        for val in val_table:
+            pdf.cell(cell_width, cell_height, f"{float(np.mean(val)):.{decimals}}", 1, 0, 'C')
         pdf.ln()
 
         # std deviation
         pdf.set_x(cell_margin)
         pdf.cell(cell_width, cell_height, f"std deviation", 1, 0, 'C')
         pdf.cell(cell_width_id, cell_height, f"", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.std(j_max):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.std(wpe_max):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{led_list.j_at_wpe_max_std:.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.std(i_3_3v):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.std(op_power_3_3v):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.std(o_30mA):.{3}}", 1, 0, 'C')
-        pdf.cell(cell_width, cell_height, f"{np.std(iqe_max):.{3}}", 1, 0, 'C')
+        for val in val_table:
+            pdf.cell(cell_width, cell_height, f"{float(np.std(val)):.{decimals}}", 1, 0, 'C')
         pdf.ln()
         pdf.ln()
 

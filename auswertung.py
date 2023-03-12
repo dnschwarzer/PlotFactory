@@ -136,8 +136,7 @@ class Auswertung:
                     current_led_list.leds.append(led)
 
                     title = f"Q{led.led_no} ID{led.led_id} : " + str(round(led.LED_Dim_y * 10 ** 4)) \
-                            + " µm x " + str(round(led.LED_Dim_y * 10 ** 4)) + " µm, WPE_max = " + str(
-                        led.wpe_max) + " %, J_Max = " + str(led.j_max) + "A/cm²"
+                            + " µm x " + str(round(led.LED_Dim_y * 10 ** 4)) + " µm, WPE_max = " + f"{float(led.wpe_max):.{3}} %, J_Max = {float(led.j_max):.{6}} A/cm²"
 
                     if self.do_pixel_plot:
                         await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
@@ -256,7 +255,7 @@ class Auswertung:
         fig, ax = plt.subplots(figsize=(18, 12))
         static_m.format_plot(plt, title, ax, self.fontsize)
 
-        idx_wpe_max = array_y.argmax(axis=0)
+        idx_wpe_max = led.wpe_array.argmax(axis=0)
         j_at_wpe_max = led.current_soll_array[idx_wpe_max] / led.led_area
         n = 3
         start_idx = static_m.find_nearest(led.j_array, j_at_wpe_max / n)
@@ -335,7 +334,6 @@ class Auswertung:
     async def plot_save_f(self, file, led, title):
         if led.is_malfunctioning:
             return
-
         array_x, array_y = led.p_array, led.eqe_array
         # only values after wpe max
         idx_eqe = static_m.find_nearest(led.eqe_array, led.eqe_max)
@@ -363,20 +361,18 @@ class Auswertung:
         array_y = led.eqe_max / array_y
         array_y2 = led.eqe_max / array_y2
         fig, ax = plt.subplots(figsize=(18, 12))
-        ax.set_title(title)
+        static_m.format_plot(plt, title, ax, self.fontsize)
 
         if len(array_x) > 0:
 
-            end_idx = static_m.find_nearest(array_x, 8)
+            end_idx = static_m.find_nearest(array_x, 4)
             x = array_x[:end_idx]
             y = array_y[:end_idx]
 
             if not len(x) <= 0 and np.isfinite(x).all() and np.isfinite(y).all():
-                q_func = lambda x_param, q: (q + x_param) / (q + 2)
-                popt, pcov = scipy.optimize.curve_fit(q_func, x, y)
                 # more x vals
                 xfine = np.linspace(array_x[0], array_x[-1], 100)
-                y_fitted = q_func(xfine, popt[0])
+                y_fitted = led.q_func(xfine, led.q)
                 # print(f"LED: {led.led_no}  Q {popt[0]} pcov:{pcov[0]}")
                 ax.scatter(xfine, y_fitted, c='green')
 
@@ -384,7 +380,7 @@ class Auswertung:
 
         ax.plot(array_x, array_y, "k")
         ax.plot(array_x2, array_y2, "blue")
-        ax.set_xlabel(f"sqrt(P) + 1/sqrt(P)| fit param: x0:{x[0]}, x_end:{x[-1]}, Q={popt[0]}, covar={pcov[0]}, IQE_max ={(popt[0]/(popt[0]+2))*10**2}%")
+        ax.set_xlabel(f"sqrt(P) + 1/sqrt(P) | fit param: x0:{x[0]}, x_end:{x[-1]}, Q={float(led.q):.{6}}  covar={led.q_cov}, IQE_max = {float((led.q/(led.q+2))*10**2):.{3}}%")
         ax.set_ylabel("EQE_max / EQE")
         ax.grid(True)
 
