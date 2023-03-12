@@ -166,6 +166,9 @@ class LED:
         logx3 = np.log(x3)
         y_fit = np.exp(np.polyval(p, logx3))
 
+        print(f"wpe max: {max(self.eqe_array)}")
+        print(f"fit max: {max(y_fit)}")
+
         self.eqe_max = max(y_fit)
         self.eqe_fit_coeff = p
 

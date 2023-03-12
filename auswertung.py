@@ -137,7 +137,7 @@ class Auswertung:
                             op_power_li.append(opt_power)
                             current_density_li.append(current_density)
 
-                    print(f"datapoint cnt: {len(i_soll_li)} at LED: {led.led_no}")
+                    # print(f"datapoint cnt: {len(i_soll_li)} at LED: {led.led_no}")
                     if len(i_soll_li) <= self.minimum_datapoints:
                         continue
 
@@ -145,8 +145,8 @@ class Auswertung:
                     led.add_data(u_mess_li, u_korr_li, i_soll_li, current_density_li, op_power_li)
                     current_led_list.leds.append(led)
 
-                    title = f"Q{led.led_no} ID{led.led_id} : " + str(led.LED_Dim_x) \
-                            + " µm x " + str(led.LED_Dim_y) + " µm, WPE_max = " + str(
+                    title = f"Q{led.led_no} ID{led.led_id} : " + str(round(led.LED_Dim_y * 10 ** 4)) \
+                            + " µm x " + str(round(led.LED_Dim_y * 10 ** 4)) + " µm, WPE_max = " + str(
                         led.wpe_max) + " %, J_Max = " + str(led.j_max) + "A/cm²"
 
                     if self.do_pixel_plot:
@@ -309,7 +309,7 @@ class Auswertung:
         delta = 0.01
         A = led.iqe_max
         B = led.j_at_wpe_max
-        print(f"j max = {B}")
+        # print(f"j max = {B}")
 
         xrange = np.geomspace(0.1, 10 ** 5, 50)
         yrange = np.geomspace(0.01, A + 0.1, 50)
@@ -327,7 +327,7 @@ class Auswertung:
         ax.set_ylim([0, led.iqe_max])
 
         y_fit = np.polyval(led.eqe_fit_coeff, xrange)
-        print(f"eqe p : {led.eqe_fit_coeff}")
+        # print(f"eqe p : {led.eqe_fit_coeff}")
 
         ax2 = ax.twinx()
         ax2.plot(array_x, array_y, 'b')
@@ -390,7 +390,7 @@ class Auswertung:
                 # more x vals
                 xfine = np.linspace(array_x[0], array_x[-1], 100)
                 y_fitted = q_func(xfine, popt[0])
-                print(f"LED: {led.led_no}  Q {popt[0]} pcov:{pcov[0]}")
+                # print(f"LED: {led.led_no}  Q {popt[0]} pcov:{pcov[0]}")
                 ax.scatter(xfine, y_fitted, c='green')
 
         ax.plot(array_x, array_y, "k")
