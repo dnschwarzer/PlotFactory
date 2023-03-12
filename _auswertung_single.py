@@ -87,10 +87,7 @@ class AuswertungExtensionSingle():
         n = 3
         start_idx = static_m.find_nearest(self.led_list.j_array_mean, j_at_wpe_max / n)
         end_idx = static_m.find_nearest(self.led_list.j_array_mean, j_at_wpe_max * n)
-        print(
-            f"start index = {start_idx} J = {self.led_list.current_array_mean[start_idx] / self.led_list.leds[0].led_area} A/cm^2")
-        print(
-            f"end index = {end_idx} J = {self.led_list.current_array_mean[end_idx] / self.led_list.leds[0].led_area} A/cm^2")
+
 
         # ax 2
         ax2 = ax.twinx()

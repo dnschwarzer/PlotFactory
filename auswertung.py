@@ -51,7 +51,6 @@ class Auswertung:
     async def build(self) -> str:
         return await self.plot(self.filepath)
 
-
     async def plot(self, filepath) -> str:
         syspath = filepath
         if syspath == "" or syspath == " ":
@@ -59,7 +58,6 @@ class Auswertung:
 
         if not os.path.exists(syspath):
             return "provided path doesnt exist"
-
 
         subfolders = [f.path for f in os.scandir(syspath) if f.is_dir()]
 
@@ -148,7 +146,6 @@ class Auswertung:
                         await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
                         await self.plot_save_iqe(f"{folder}/{self.output_dir}/{file}", led, title)
                         self.single_plot_paths.clear()
-
 
             if len(current_led_list.leds) == 0:
                 return "no well formatted files found"

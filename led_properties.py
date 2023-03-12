@@ -4,6 +4,7 @@ import scipy.optimize as opt
 import scipy
 import auswertung_helper as static_m
 
+
 class LED:
 
     def __init__(self, led_no, led_area, led_id):
@@ -135,7 +136,6 @@ class LED:
 
         # fitting eqe and get eqe max over current, iqe
         self.eqe_fit_eqe_max()
-        self.get_i_at_eqe_max()
         self.p_array = self.current_soll_array / self.i_at_eqe_max
         self.get_iqe_fit()
 
@@ -157,8 +157,8 @@ class LED:
         # scale is log, therefore log values
         logx, logy = np.log(x), np.log(y)
         p = np.polyfit(logx, logy, 8)
-        x3 = np.linspace(x[0], x[-1], 80)
-        logx3 = np.log(x3)
+        x_fine = np.linspace(x[0], x[-1], 80)
+        logx3 = np.log(x_fine)
         y_fit = np.exp(np.polyval(p, logx3))
 
         print(f"wpe max: {max(self.eqe_array)}")
@@ -167,9 +167,8 @@ class LED:
         self.eqe_max = max(y_fit)
         self.eqe_fit_coeff = p
 
-    def get_i_at_eqe_max(self):
-        idx_eqe_max = static_m.find_nearest(self.eqe_array, self.eqe_max)
-        self.i_at_eqe_max = self.current_soll_array[idx_eqe_max]
+        idx_eqe_max = static_m.find_nearest(y_fit, self.eqe_max)
+        self.i_at_eqe_max = x_fine[idx_eqe_max]
 
     def get_iqe_fit(self):
         array_x, array_y = self.p_array, self.eqe_array
