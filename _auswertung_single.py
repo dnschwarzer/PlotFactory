@@ -302,3 +302,52 @@ class AuswertungExtensionSingle():
         path = f"{self.filepath}/Output/{file_name}.png"
         fig.savefig(path)
         self.summary_plot_paths.append(f"{path}")
+
+    async def plot_save_iqe(self, file, title, led_list):
+       # array_x, array_y = led.j_array, led.eqe_array
+        array_x, array_y = led_list.j_array_mean, led_list.eqe_array_mean
+        fig, ax = plt.subplots(figsize=(18, 12))
+        static_m.format_plot(plt, title, ax, self.fontsize)
+
+        plt.rcParams["figure.figsize"] = [7.50, 3.50]
+        plt.rcParams["figure.autolayout"] = True
+        delta = 0.01
+        A = led_list.iqe_max_mean
+        B = led_list.j_at_wpe_max_mean
+        # print(f"j max = {B}")
+
+        xrange = np.geomspace(0.1, 10 ** 8, 50)
+        yrange = np.geomspace(0.01, A + 0.1, 50)
+
+        x, y = np.meshgrid(xrange, yrange)
+        equation = 1 - (((1 - A) / (2 * x)) * (1 + (y * x) / (A * B)) * np.sqrt(y * x * B / A)) - y  # x = J, y = IQE
+        plt.contour(x, y, equation, [0], colors="black")
+        plt.xscale("log")
+        plt.grid(which='major', linestyle='-')
+        plt.grid(which='minor', linestyle='--')
+
+        ax.set_xlabel("J [A/cm²]", fontsize=self.fontsize)
+        ax.set_ylabel("IQE", fontsize=self.fontsize)
+        ax.grid(True)
+        ax.set_ylim([0, A])
+
+        # y_fit = np.polyval(led_list.eqe_fit_coeff_mean, xrange)
+        # print(f"eqe p : {led.eqe_fit_coeff}")
+
+        ax2 = ax.twinx()
+        ax2.plot(array_x, array_y, 'b')
+        ax2.set_xscale('log')
+        ax2.set_xlabel("J [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("EQE", fontsize=self.fontsize)
+        ax2.yaxis.label.set_color('blue')
+        ax2.tick_params(axis='y', colors='blue')
+        ax2.grid(False)
+        ax2.set_ylim([0, max(array_y)])
+        #static_m.scalar_formatter(ax2)
+
+
+        file = file.replace(".csv", "_iqe.png")
+        file_name = file.split("/")[-1]
+        path = f"{self.filepath}/Output/{file_name}.png"
+        fig.savefig(path)
+        self.summary_plot_paths.append(f"{path}")

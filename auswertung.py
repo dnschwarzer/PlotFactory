@@ -68,7 +68,7 @@ class Auswertung:
         correction_start = 1 * 10 ** -1
         correction = 1.5 * 10 ** -1
         idxs = 0
-        for corr in range(0, 2):
+        for corr in range(0, 1):
             correction += 0.01
 
             correction = round(correction, 3)
@@ -226,6 +226,7 @@ class Auswertung:
                    # await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
                     await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
                     await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg",  footer, current_led_list)
+                    await single.plot_save_iqe(f"{folder}/{self.output_dir}/{file_footer}_iqe", "IQE " + footer, current_led_list)
 
                     # output path and filename for summary pdf
                     pdf_summary_path = f"{folder}/{self.output_dir}/summary_{file_footer}.pdf"
