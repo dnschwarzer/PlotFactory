@@ -53,9 +53,9 @@ class AuswertungExtensionSingle():
 
         file = file.replace(".csv", "_c_sum.png")
         file_name = file.split("/")[-1]
-        path = f"{self.filepath}/Output/{file_name}"
+        path = f"{self.filepath}/Output/{file_name}.png"
         fig.savefig(path)
-        self.summary_plot_paths.append(f"{path}.png")
+        self.summary_plot_paths.append(f"{path}")
 
     async def plot_save_c_fit(self, file, title):
         fig, ax = plt.subplots(figsize=(18, 12))
@@ -120,9 +120,9 @@ class AuswertungExtensionSingle():
 
         file = file.replace(".csv", "c_fit.png")
         file_name = file.split("/")[-1]
-        path = f"{self.filepath}/Output/{file_name}"
+        path = f"{self.filepath}/Output/{file_name}.png"
         fig.savefig(path)
-        self.summary_plot_paths.append(f"{path}.png")
+        self.summary_plot_paths.append(f"{path}")
 
     async def plot_save_c_avg(self, file, title, led_list):
         fig, ax = plt.subplots(figsize=(18, 12))
@@ -148,9 +148,9 @@ class AuswertungExtensionSingle():
 
         file1 = file.replace(".csv", "c_avg_opt.png")
         file_name1 = file1.split("/")[-1]
-        path1 = f"{self.filepath}/Output/{file_name1}_1"
+        path1 = f"{self.filepath}/Output/{file_name1}_1.png"
         fig.savefig(path1)
-        self.summary_plot_paths.append(f"{path1}.png")
+        self.summary_plot_paths.append(f"{path1}")
 
         # format ax2
         fig, ax2 = plt.subplots(figsize=(18, 12))
@@ -176,9 +176,9 @@ class AuswertungExtensionSingle():
 
         file2 = file.replace(".csv", "c_avg_opt2.png")
         file_name2 = file2.split("/")[-1]
-        path2 = f"{self.filepath}/Output/{file_name2}_2"
+        path2 = f"{self.filepath}/Output/{file_name2}_2.png"
         fig.savefig(path2)
-        self.summary_plot_paths.append(f"{path2}.png")
+        self.summary_plot_paths.append(f"{path2}")
 
     async def plot_save_avg_v(self, file, title, led_list):
         fig, host = plt.subplots(figsize=(18, 12))
@@ -258,9 +258,9 @@ class AuswertungExtensionSingle():
 
         file = file.replace(".csv", "_avg.png")
         file_name = file.split("/")[-1]
-        path = f"{self.filepath}/Output/{file_name}"
+        path = f"{self.filepath}/Output/{file_name}.png"
         fig.savefig(path)
-        self.summary_plot_paths.append(f"{path}.png")
+        self.summary_plot_paths.append(f"{path}")
 
     def make_patch_spines_invisible(self, ax):
         ax.set_frame_on(True)
@@ -299,6 +299,6 @@ class AuswertungExtensionSingle():
 
         file = file.replace(".csv", "_sum.png")
         file_name = file.split("/")[-1]
-        path = f"{self.filepath}/Output/{file_name}"
+        path = f"{self.filepath}/Output/{file_name}.png"
         fig.savefig(path)
-        self.summary_plot_paths.append(f"{path}.png")
+        self.summary_plot_paths.append(f"{path}")

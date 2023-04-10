@@ -12,10 +12,24 @@ import auswertung_helper as static_m
 import matplotlib.pyplot as plt
 
 
+
 def format_e(n):
     a = '%E' % n
     b = a.split('E')[0].rstrip('0').rstrip('.') + 'E' + a.split('E')[1]
     return f"{b:.{4}}"
+
+# hardcoded values, no logic behind it
+def get_ratio(size):
+    if size == "3":
+        return 3
+    elif size == "6":
+        return 5
+    elif size == "9":
+        return 10
+    elif size == "18":
+        return 20
+
+    #print("size: " + size)
 
 
 class Auswertung:
@@ -51,140 +65,203 @@ class Auswertung:
 
         subfolders = [f.path for f in os.scandir(syspath) if f.is_dir()]
 
-        for folder in subfolders:
-            if not os.path.exists(folder + f"\\{self.output_dir}"):
-                os.makedirs(folder + f"\\{self.output_dir}")
+        correction_start = 1 * 10 ** -1
+        correction = 1.5 * 10 ** -1
+        idxs = 0
+        for corr in range(0, 2):
+            correction += 0.01
 
+            correction = round(correction, 3)
+
+            for folder in subfolders:
+                if not os.path.exists(folder + f"\\{self.output_dir}"):
+                    os.makedirs(folder + f"\\{self.output_dir}")
+
+                self.summary_plot_paths.clear()
+                current_led_list = LedList.LedList()
+
+                for file in os.listdir(folder):
+                    if file.endswith(".csv"):
+                        file_name = file.title().replace(".Csv", "")
+                        file_name_split = file_name.split("____")
+
+                        if len(file_name_split) != 2:
+                            continue
+
+                        date_time = file_name_split[0].replace("_", "-")
+                        date = file_name_split[0].split("__")[0].replace("_", "-")
+                        measure_meta = file_name_split[1]
+
+                        # assignments
+                        measure_meta_split = measure_meta.split("_")
+                        correction_ratio = 1.0
+
+                        if len(measure_meta_split) == 3:
+                            led_no = (measure_meta_split[0].replace("Q", ""))
+                            current_led_list.color = "green" if led_no == "unknown" else "blue"
+
+                            led_id = int(measure_meta_split[1].replace("Id", ""))
+                            edge_length = float(measure_meta_split[2].replace("D", ""))
+                            correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
+                            edge_length = float(edge_length) - float(correction)
+
+
+                            current_led_list.edge_length = edge_length
+                            led_area = edge_length * edge_length
+                            led = led_properties.LED(led_no, led_area, led_id, date_time)
+
+
+                        elif len(measure_meta_split) == 4:
+                            led_no = int(measure_meta_split[1])
+                            led_id = int(measure_meta_split[2].replace("Id", ""))
+                            size = measure_meta_split[0].replace("R1", "").replace(" ", "")
+                            ratio = float(get_ratio(size))
+                            edge_length = np.sqrt(np.sqrt(ratio))
+
+                            correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
+                            edge_length = float(edge_length) - float(correction)
+                            current_led_list.edge_length = edge_length
+                            led_area = current_led_list.edge_length * current_led_list.edge_length
+                            current_led_list.ratio = led_area
+
+                            led = led_properties.LED(led_no, led_area, led_id, date_time)
+                            current_led_list.geometric = "rectangle"
+                        else:
+                            continue
+
+                        correction_ratio *= correction_ratio
+                        current_led_list.area_correction = correction
+
+                        with open(f'{folder}/{file}', 'r') as f:
+                            next(f)
+                            u_mess_li = []
+                            u_korr_li = []
+                            i_soll_li = []
+                            op_power_li = []
+                            current_density_li = []
+                            reader = csv.reader(f, delimiter=";")
+                            cnt = 0
+                           # print(correction_ratio)
+                            for row in reader:
+                                if len(row) != 5:
+                                    continue
+
+                                try:
+                                    u_mess = float(row[0]) * float(correction_ratio)
+                                    u_korr = float(row[1]) * float(correction_ratio)
+                                    #print(f"row=({row[2]}) correction=({correction_ratio})  {led.to_string()} row=({cnt})")
+                                    i_soll = float(row[2]) * float(correction_ratio)
+                                    opt_power = float(row[3])
+                                except ValueError:
+                                    led.is_malfunctioning = True
+                                    continue
+
+                                #current_density = float(row[4]) * (4.0/np.pi)
+                                # falsche flächenannahme
+                               # current_density = float(row[4]) if date == "10-02-2023" else float(row[4]) * (4.0/np.pi)
+                                current_density = i_soll / (led_area * 10 ** -8)
+
+                                # filter opt_power noise
+                                # if(opt_power > 7*10E-10;100*opt_power/(volt*current);0)
+                                if opt_power < 3*10**-8 or cnt < 10:
+                                    # opt_power = 100 * opt_power/(u_korr * i_mess)
+                                    opt_power = 0
+                                else:
+                                    opt_power = opt_power
+
+                                cnt = cnt + 1
+
+                                # add data to lists
+                                u_mess_li.append(u_mess)
+                                u_korr_li.append(u_korr)
+                                i_soll_li.append(i_soll)
+                                op_power_li.append(opt_power)
+                                current_density_li.append(current_density)
+
+                        #print(f"datapoint cnt: {len(i_soll_li)} at LED: {led.led_no}")
+                        if len(i_soll_li) <= self.minimum_datapoints:
+                            continue
+
+                        # add data to led object and calculate other properties
+                        led.add_data(u_mess_li, u_korr_li, i_soll_li, current_density_li, op_power_li)
+                        current_led_list.leds.append(led)
+
+                        title = f"Q{led.led_no} ID{led.led_id} : " + str(round(led.LED_Dim_y * 10 ** 4)) \
+                                + " µm x " + str(round(led.LED_Dim_y * 10 ** 4)) + " µm, WPE_max = " + f"{float(led.wpe_max):.{3}} %, J_Max = {float(led.j_max):.{6}} A/cm²"
+
+                        if self.do_pixel_plot:
+                            await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
+                            await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
+                            await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
+                            await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
+                            await self.plot_save_iqe(f"{folder}/{self.output_dir}/{file}", led, title)
+                            self.single_plot_paths.clear()
+
+                if len(current_led_list.leds) == 0:
+                    return "no well formatted files found"
+
+                first_led = current_led_list.leds[0]
+                footer = f"{round(current_led_list.edge_length, 2)}µm {current_led_list.geometric} R 1_{round(current_led_list.ratio, 2)}"
+
+                #footer = f"{round(first_led.LED_Dim_x * 10 ** 4), 2}x{round(first_led.LED_Dim_y * 10 ** 4), 2} µm"
+                file_footer = footer.replace(" ", "_")
+
+                # calc ax limits
+                current_led_list.measurement_completed()
+                self.limit_x_axis_voltage_end = max(current_led_list.voltage_array_mean)
+                self.limit_x_axis_density_end = max(current_led_list.current_density_array_mean)
+                op_idx = 0
+                while current_led_list.op_power_array_mean[op_idx] == 0:
+                    op_idx = op_idx + 1
+                self.limit_x_axis_density_begin = current_led_list.current_density_array_mean[op_idx+1]
+
+                self.list_of_measurements.append(current_led_list)
+                if self.do_array_plot:
+                    # outsourcing extension methods
+                    single = Single(current_led_list, folder, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
+
+                    # plot the 4 summary plots
+                    await single.plot_save_c_sum(f"{folder}/{self.output_dir}/{file_footer}_c_sum", "all LEDs " + footer, current_led_list)
+                    await single.plot_save_c_avg(f"{folder}/{self.output_dir}/{file_footer}_c_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
+                   # await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
+                    await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
+                    await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg",  footer, current_led_list)
+
+                    # output path and filename for summary pdf
+                    pdf_summary_path = f"{folder}/{self.output_dir}/summary_{file_footer}.pdf"
+
+                    # create the actual summary pdf
+                    header = f'Measurement report {date_time}'
+                    pdfc.PDF(header, footer).create_summary_pdf(self.summary_plot_paths, pdf_summary_path, f"Summary of {len(current_led_list.leds)} x {footer}",
+                                                                current_led_list)
+
+                    # create csv
+                    csv_path = f'{folder}/{self.output_dir}/_output.csv'
+                    current_led_list.create_csv(csv_path)
+
+
+            # all measurements
+            # sort for size
+            self.list_of_measurements.sort(key=lambda x: x.area, reverse=True)
+            multi = Multi(self.filepath, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
+
+            if self.do_summary_plot:
+                iqe_wpe_paths = [f'{syspath}/_size_iqe_wpe_{correction}.csv']
+                multi.create_overview_csv(iqe_wpe_paths, self.list_of_measurements)
+
+                await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
+                await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
+                await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
+                await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
+
+                csv_paths = [f'{syspath}/_opt_dens.csv', f'{syspath}/_wpe_dens.csv']
+
+
+                multi.create_csv(csv_paths, self.list_of_measurements)
+
+            self.list_of_measurements.clear()
             self.summary_plot_paths.clear()
-            current_led_list = LedList.LedList()
-
-            for file in os.listdir(folder):
-                if file.endswith(".csv"):
-                    file_name = file.title().replace(".Csv", "")
-                    file_name_split = file_name.split("____")
-
-                    if len(file_name_split) != 2:
-                        continue
-
-                    date_time = file_name_split[0].replace("_", "-")
-                    measure_meta = file_name_split[1]
-
-                    # assignments
-                    measure_meta_split = measure_meta.split("_")
-                    if len(measure_meta_split) != 3:
-                        continue
-
-                    led_no = int(measure_meta_split[0].replace("Q", ""))
-                    led_id = int(measure_meta_split[1].replace("Id", ""))
-                    edge_length = float(measure_meta_split[2].replace("D", ""))
-                    led_area = edge_length * edge_length
-                    led = led_properties.LED(led_no, led_area, led_id, date_time)
-
-                    with open(f'{folder}/{file}', 'r') as f:
-                        next(f)
-                        u_mess_li = []
-                        u_korr_li = []
-                        i_soll_li = []
-                        op_power_li = []
-                        current_density_li = []
-                        reader = csv.reader(f, delimiter=";")
-                        cnt = 0
-
-                        for row in reader:
-                            if len(row) != 5:
-                                continue
-                            u_mess = float(row[0])
-                            u_korr = float(row[1])
-                            i_soll = float(row[2])
-                            opt_power = float(row[3])
-                            current_density = float(row[4]) * (4.0/np.pi)
-
-                            # filter opt_power noise
-                            # if(opt_power > 7*10E-10;100*opt_power/(volt*current);0)
-                            if opt_power < 3*10**-8 or cnt < 10:
-                                # opt_power = 100 * opt_power/(u_korr * i_mess)
-                                opt_power = 0
-                            else:
-                                opt_power = opt_power
-
-
-                            cnt = cnt + 1
-
-                            # add data to lists
-                            u_mess_li.append(u_mess)
-                            u_korr_li.append(u_korr)
-                            i_soll_li.append(i_soll)
-                            op_power_li.append(opt_power)
-                            current_density_li.append(current_density)
-
-                    # print(f"datapoint cnt: {len(i_soll_li)} at LED: {led.led_no}")
-                    if len(i_soll_li) <= self.minimum_datapoints:
-                        continue
-
-                    # add data to led object and calculate other properties
-                    led.add_data(u_mess_li, u_korr_li, i_soll_li, current_density_li, op_power_li)
-                    current_led_list.leds.append(led)
-
-                    title = f"Q{led.led_no} ID{led.led_id} : " + str(round(led.LED_Dim_y * 10 ** 4)) \
-                            + " µm x " + str(round(led.LED_Dim_y * 10 ** 4)) + " µm, WPE_max = " + f"{float(led.wpe_max):.{3}} %, J_Max = {float(led.j_max):.{6}} A/cm²"
-
-                    if self.do_pixel_plot:
-                        await self.plot_save_v(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_c(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_e(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_f(f"{folder}/{self.output_dir}/{file}", led, title)
-                        await self.plot_save_iqe(f"{folder}/{self.output_dir}/{file}", led, title)
-                        self.single_plot_paths.clear()
-
-            if len(current_led_list.leds) == 0:
-                return "no well formatted files found"
-
-            first_led = current_led_list.leds[0]
-            footer = f"{round(first_led.LED_Dim_x * 10 ** 4)}x{round(first_led.LED_Dim_y * 10 ** 4)} µm"
-            file_footer = footer.replace(" ", "_")
-
-            # calc ax limits
-            current_led_list.measurement_completed()
-            self.limit_x_axis_voltage_end = max(current_led_list.voltage_array_mean)
-            self.limit_x_axis_density_end = max(current_led_list.current_density_array_mean)
-            op_idx = 0
-            while current_led_list.op_power_array_mean[op_idx] == 0:
-                op_idx = op_idx + 1
-            self.limit_x_axis_density_begin = current_led_list.current_density_array_mean[op_idx+1]
-
-            self.list_of_measurements.append(current_led_list)
-            if self.do_array_plot:
-                # outsourcing extension methods
-                single = Single(current_led_list, folder, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
-
-                # plot the 4 summary plots
-                await single.plot_save_c_sum(f"{folder}/{self.output_dir}/{file_footer}_c_sum", "all LEDs " + footer, current_led_list)
-                await single.plot_save_c_avg(f"{folder}/{self.output_dir}/{file_footer}_c_avg", "arithmetic mean and standard deviation " + footer, current_led_list)
-                #await single.plot_save_c_fit(f"{folder}/{self.output_dir}/{file_footer}_c_fit", "curve fitting " + footer)
-                await single.plot_save_sum_v(f"{folder}/{self.output_dir}/{file_footer}_v_sum", "all LEDs " + footer, current_led_list)
-                await single.plot_save_avg_v(f"{folder}/{self.output_dir}/{file_footer}_v_avg",  footer, current_led_list)
-
-                # output path and filename for summary pdf
-                pdf_summary_path = f"{folder}/{self.output_dir}/summary_{file_footer}.pdf"
-
-                # create the actual summary pdf
-                header = f'Measurement report {date_time}'
-                pdfc.PDF(header, footer).create_summary_pdf(self.summary_plot_paths, pdf_summary_path, f"Summary of {len(current_led_list.leds)} x {footer}",
-                                                            current_led_list)
-
-                # create csv
-                csv_path = f'{folder}/{self.output_dir}/_output.csv'
-                current_led_list.create_csv(csv_path)
-
-
-        # all measurements
-        # sort for size
-        self.list_of_measurements.sort(key=lambda x: x.area, reverse=True)
-        multi = Multi(self.filepath, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
-
-        if self.do_summary_plot:
-            await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
-            await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
+            self.single_plot_paths.clear()
 
         return "finished"
 
@@ -197,9 +274,9 @@ class Auswertung:
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel("Current density [A/cm²]")
+        ax.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
         ax.set_yscale('log')
-        ax.set_ylabel("Opt. Power [W]")
+        ax.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax.grid(which='major', linestyle='-')
         ax.grid(which='minor', linestyle='--')
         ax.grid(True)
@@ -207,8 +284,8 @@ class Auswertung:
         ax2 = ax.twinx()
         ax2.plot(array_x, array2_y, 'b')
         ax2.set_xscale('log')
-        ax2.set_xlabel("Current density [A/cm²]")
-        ax2.set_ylabel("WPE [%]")
+        ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
@@ -225,14 +302,14 @@ class Auswertung:
         static_m.format_plot(plt, title, ax, self.fontsize)
         ax.plot(array_x, array_y, "k")
         ax.set_yscale('log')
-        ax.set_xlabel("Voltage [V]")
-        ax.set_ylabel("Current [A]")
+        ax.set_xlabel("Voltage [V]", fontsize=self.fontsize)
+        ax.set_ylabel("Current [A]", fontsize=self.fontsize)
         ax.grid(True)
         ax2 = ax.twinx()
         ax2.plot(array_x, array2_y, 'b')
         ax2.set_yscale('log')
-        ax2.set_xlabel("Voltage [V]")
-        ax2.set_ylabel("Opt. Power [W]")
+        ax2.set_xlabel("Voltage [V]", fontsize=self.fontsize)
+        ax2.set_ylabel("Opt. Power [W]", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
@@ -268,8 +345,8 @@ class Auswertung:
 
         ax.plot(array_x, array_y, "k")
         ax.set_xscale('log')
-        ax.set_xlabel("Current [A]")
-        ax.set_ylabel("EQE")
+        ax.set_xlabel("Current [A]", fontsize=self.fontsize)
+        ax.set_ylabel("EQE", fontsize=self.fontsize)
         ax.grid(True)
 
         file = file.replace(".csv", "_e.png")
@@ -277,6 +354,7 @@ class Auswertung:
         self.single_plot_paths.append(file)
 
     async def plot_save_iqe(self, file, led, title):
+       # array_x, array_y = led.j_array, led.eqe_array
         array_x, array_y = led.j_array, led.eqe_array
         fig, ax = plt.subplots(figsize=(18, 12))
         static_m.format_plot(plt, title, ax, self.fontsize)
@@ -288,7 +366,7 @@ class Auswertung:
         B = led.j_at_wpe_max
         # print(f"j max = {B}")
 
-        xrange = np.geomspace(0.1, 10 ** 5, 50)
+        xrange = np.geomspace(0.1, 10 ** 8, 50)
         yrange = np.geomspace(0.01, A + 0.1, 50)
 
         x, y = np.meshgrid(xrange, yrange)
@@ -298,8 +376,8 @@ class Auswertung:
         plt.grid(which='major', linestyle='-')
         plt.grid(which='minor', linestyle='--')
 
-        ax.set_xlabel("J [A/cm²]")
-        ax.set_ylabel("IQE")
+        ax.set_xlabel("J [A/cm²]", fontsize=self.fontsize)
+        ax.set_ylabel("IQE", fontsize=self.fontsize)
         ax.grid(True)
         ax.set_ylim([0, led.iqe_max])
 
@@ -309,8 +387,8 @@ class Auswertung:
         ax2 = ax.twinx()
         ax2.plot(array_x, array_y, 'b')
         ax2.set_xscale('log')
-        ax2.set_xlabel("J [A/cm²]")
-        ax2.set_ylabel("EQE")
+        ax2.set_xlabel("J [A/cm²]", fontsize=self.fontsize)
+        ax2.set_ylabel("EQE", fontsize=self.fontsize)
         ax2.yaxis.label.set_color('blue')
         ax2.tick_params(axis='y', colors='blue')
         ax2.grid(False)
@@ -356,7 +434,7 @@ class Auswertung:
 
         if len(array_x) > 0:
 
-            end_idx = static_m.find_nearest(array_x, 4)
+            end_idx = static_m.find_nearest(array_x,4)
             x = array_x[:end_idx]
             y = array_y[:end_idx]
 
@@ -371,8 +449,8 @@ class Auswertung:
 
         ax.plot(array_x, array_y, "k")
         ax.plot(array_x2, array_y2, "blue")
-        ax.set_xlabel(f"sqrt(P) + 1/sqrt(P) | fit param: x0:{x[0]}, x_end:{x[-1]}, Q={float(led.q):.{6}}  covar={led.q_cov}, IQE_max = {float((led.q/(led.q+2))*10**2):.{3}}%")
-        ax.set_ylabel("EQE_max / EQE")
+        ax.set_xlabel(f"sqrt(P) + 1/sqrt(P) | fit param: x0:{x[0]}, x_end:{x[-1]}, Q={float(led.q):.{6}}  covar={led.q_cov}, IQE_max = {float((led.q/(led.q+2))*10**2):.{3}}%", fontsize=self.fontsize-10)
+        ax.set_ylabel("EQE_max / EQE", fontsize=self.fontsize)
         ax.grid(True)
 
         file = file.replace(".csv", "_f.png")

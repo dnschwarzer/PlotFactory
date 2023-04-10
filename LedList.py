@@ -1,14 +1,20 @@
 import numpy as np
 import led_properties as led
 import csv
+from collections import Counter
 
 
 class LedList:
 
     def __init__(self):
         self.leds = []
+        self.area_correction = 0
         self.led_area_array = []
         self.area = 0
+        self.edge_length = 0
+        self.ratio = 1
+        self.color = "blue"
+        self.geometric = "square"
 
         # data
         self.voltage_array = []
@@ -42,6 +48,8 @@ class LedList:
         self.is_open_circuit_cnt = 0
         self.idx_wpe_max = 0
         self.wpe_mean_max = 0
+        self.wpe_abs_max = 0
+        self.iqe_max_mean = 0
         self.j_at_wpe_max = []
         self.j_at_wpe_max_mean = 0
         self.j_at_wpe_max_std = 0
@@ -54,19 +62,35 @@ class LedList:
         for pixel in self.leds:
             tmp_list.append(pixel.wpe_array)
 
-        self.max_data_points = len(max(tmp_list, key=len))
+        count = Counter()
+        for led in self.leds:
+            if len(led.wpe_array) >= 30:
+                count[len(led.current_soll_array)] += 1
+
+        # Ermitteln der am häufigsten auftretenden Subsublistenlängen
+        most_common_lengths = sorted(count.items(), key=lambda x: (-x[1], -x[0]))
+
+        (length, occ) = most_common_lengths[0]
+        self.max_data_points = length
+
         # wenn nicht alle arrays gleiche länge : entferne
+        mal = 0
         for pixel in self.leds:
             if len(pixel.wpe_array) != self.max_data_points:
                 pixel.is_malfunctioning = True
                 pixel.is_open_circuit = True
-            if max(pixel.wpe_array) > 100:
+            if max(pixel.wpe_array) > 100 or round(np.mean(pixel.wpe_array)) == 0:
                 pixel.is_malfunctioning = True
                 pixel.is_open_circuit = True
             if pixel.is_shorted:
                 self.is_shorted_cnt = self.is_shorted_cnt + 1
             if pixel.is_open_circuit:
                 self.is_open_circuit_cnt = self.is_open_circuit_cnt + 1
+            if pixel.is_malfunctioning:
+                mal = mal + 1
+
+
+       # print(f"{len(self.leds) -mal}:{len(self.leds)} Pixel used")
 
     def measurement_completed(self):
         self.filter()
@@ -100,7 +124,9 @@ class LedList:
         tmp_eqe = []
         tmp_op_power = []
         tmp_j = []
+        tmp_iqe_max = []
 
+        count = 0
         for point in range(0, data_points):
             for led in self.leds:
                 # skip malfunctioning leds or corrupted measurements
@@ -113,6 +139,7 @@ class LedList:
                 tmp_eqe.append(led.eqe_array[point])
                 tmp_op_power.append(led.op_power_array[point])
                 tmp_j.append(led.j_array[point])
+                count = count + 1
 
             # error
             self.voltage_array_std.append(np.std(tmp_voltage))
@@ -141,9 +168,15 @@ class LedList:
             tmp_op_power.clear()
             tmp_j.clear()
 
+        for leds in self.leds:
+            tmp_iqe_max.append(leds.iqe_max)
+
+
         # data for table
+        self.iqe_max_mean = np.mean(tmp_iqe_max)
         self.idx_wpe_max = np.array(self.wpe_array_mean).argmax(axis=0)
         self.wpe_mean_max = max(self.wpe_array_mean)
+        self.wpe_abs_max = np.amax(np.asarray(self.wpe_array))
         self.j_at_wpe_max_mean = np.mean(np.array(self.j_at_wpe_max))
         self.j_at_wpe_max_std = np.std(np.array(self.j_at_wpe_max))
 

@@ -128,6 +128,9 @@ class PDF(FPDF):
 
         pdf.ln()
 
+        # sort led list by led number
+        led_list.leds.sort(key=lambda x: float(x.led_no), reverse=False)
+
         for led in led_list.leds:
             pdf.set_x(cell_margin)
             # first blank cell

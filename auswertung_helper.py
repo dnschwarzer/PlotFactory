@@ -4,11 +4,6 @@ import numpy as np
 
 
 def format_plot(plt, title, ax, fontsize):
-    # plt.rc('text', usetex=True)
-    # plt.rc('font', family='serif')
-    # plt.rc('text.latex', preamble=r'\usepackage{textgreek}')
-    # ax.set_title(title, fontsize=fontsize)
-
     ax.set_title(title, fontname='Ubuntu', fontsize=fontsize)
     plt.rcParams['font.family'] = 'serif'
     plt.rcParams['font.serif'] = 'Ubuntu'
@@ -18,8 +13,8 @@ def format_plot(plt, title, ax, fontsize):
     params = {'legend.fontsize': 'x-large',
              'axes.labelsize': 'x-large',
              'axes.titlesize': 'x-large',
-             'xtick.labelsize': 'x-large',
-             'ytick.labelsize': 'x-large'}
+             'xtick.labelsize': '20',
+             'ytick.labelsize': '20'}
     pylab.rcParams.update(params)
 
 

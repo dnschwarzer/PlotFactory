@@ -92,8 +92,12 @@ class LED:
 
     def calc(self):
         # WPE = P_opt / P_el
-        self.wpe_array = np.asarray(100 * self.op_power_array) / np.asarray((self.voltage_korr_array * self.current_soll_array))
-        self.j_array = np.asarray(self.current_soll_array) / np.asarray(([self.led_area] * len(self.current_soll_array)))
+        opt_power = np.array(self.op_power_array)
+        opt_power = opt_power * 100.0
+
+        self.wpe_array = opt_power / np.asarray((self.voltage_korr_array * self.current_soll_array))
+        self.j_array = np.asarray(self.current_soll_array) / np.asarray(self.led_area)
+       # self.j_array = self.current_density_array
         last_op_value = self.op_power_array[len(self.op_power_array) - 1]
         last_current_value = self.current_soll_array[len(self.current_soll_array) - 1]
 
@@ -104,6 +108,7 @@ class LED:
         elif last_current_value < self.OpenCircuitLimit:
             self.is_open_circuit = True
             self.is_malfunctioning = True
+            print("OC")
         else:
             self.is_shorted = True
             self.is_malfunctioning = True
@@ -159,6 +164,7 @@ class LED:
         end_idx = static_m.find_nearest(self.j_array, j_at_wpe_max * n)
         x = array_x[start_idx:end_idx]
         y = array_y[start_idx:end_idx]
+
         # scale is log, therefore log values
         logx, logy = np.log(x), np.log(y)
         p = np.polyfit(logx, logy, 8)
@@ -168,6 +174,8 @@ class LED:
 
         self.eqe_max = max(y_fit)
         self.eqe_fit_coeff = p
+
+        print(f"eqe max :{self.eqe_max }")
 
         idx_eqe_max = static_m.find_nearest(y_fit, self.eqe_max)
         self.i_at_eqe_max = x_fine[idx_eqe_max]
@@ -179,6 +187,7 @@ class LED:
         idx_eqe = static_m.find_nearest(self.eqe_array, self.eqe_max)
         array_x2 = self.p_array[:idx_eqe]
         array_y2 = self.eqe_array[:idx_eqe]
+        #print(f"{idx_eqe:}: {len(self.eqe_array)}")
 
         array_x = array_x[idx_eqe:]
         array_y = array_y[idx_eqe:]
@@ -214,3 +223,6 @@ class LED:
                 self.q = popt[0]
                 self.q_cov = pcov
                 self.iqe_max = self.q / (self.q + 2)
+
+    def to_string(self):
+        return f"Q{self.led_no}_ID{self.led_id} {self.LED_Dim_x}µm at {self.date_time}"
