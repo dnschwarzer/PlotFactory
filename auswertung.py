@@ -45,12 +45,13 @@ class Auswertung:
     limit_x_axis_voltage_begin = 2.5
     limit_x_axis_voltage_end = 6
 
-    def __init__(self, filepath, do_pixel_plot: bool, do_array_plot: bool, do_summary_plot: bool):
+    def __init__(self, filepath, do_pixel_plot: bool, do_array_plot: bool, do_summary_plot: bool, do_correction: bool):
         self.filepath = filepath
         self.do_pixel_plot = do_pixel_plot
         self.do_array_plot = do_array_plot
         self.do_summary_plot = do_summary_plot
         self.fontsize = 25
+        self.do_correction = do_correction
 
     async def build(self) -> str:
         return await self.plot(self.filepath)
@@ -72,6 +73,8 @@ class Auswertung:
             correction += 0.01
 
             correction = round(correction, 3)
+            if not self.do_correction:
+                correction = 0
 
             for folder in subfolders:
                 if not os.path.exists(folder + f"\\{self.output_dir}"):
@@ -252,6 +255,7 @@ class Auswertung:
 
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
+                await multi.plot_allsizes_wpe_wpemax_normalized(f"{syspath}_wpe_max_all_sizes_normalized", "wpe max overview", self.list_of_measurements)
                 await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
                 await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
 

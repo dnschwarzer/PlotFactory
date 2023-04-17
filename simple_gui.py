@@ -39,7 +39,7 @@ async def main_window():
             root.withdraw()
 
             file_path = filedialog.askdirectory()
-            plot_factory = auswertung.Auswertung(file_path, values["do_pixel_plot"], values["do_array_plot"], values["do_summary_plot"])
+            plot_factory = auswertung.Auswertung(file_path, values["do_pixel_plot"], values["do_array_plot"], values["do_summary_plot"], False)
             win["info"].Update("processing....")
             await asyncio.sleep(0.1)
             success = await plot_factory.build()

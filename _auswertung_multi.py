@@ -31,6 +31,17 @@ class AuswertungExtensionMulti():
 
     #  csv_path = f'{folder}/{self.output_dir}/_output.csv'
 
+    def is_comparable(self, size):
+        if size == 100:
+            return False, 0
+        elif size == 50:
+            return True, 20
+        elif size == 50:
+            return True, 20
+        elif size == 50:
+            return True, 20
+
+
     async def plot_save_c_avg(self, file, title, led_lists):
         fig, ax = plt.subplots(figsize=(24, 16))
         static_m.format_plot(plt, f"{title} area correction = {round(led_lists[0].area_correction, 2)}µm", ax, self.fontsize)
@@ -66,7 +77,8 @@ class AuswertungExtensionMulti():
         # format ax2
         fig, ax2 = plt.subplots(figsize=(24, 16))
         static_m.format_plot(plt, title, ax2, self.fontsize)
-        plt.xlim([2 * 10 ** -2, self.limit_x_axis_density_end])
+        plt.xlim([1 * 10 ** -3, 10 ** 3])
+        #plt.xlim([2 * 10 ** -2, self.limit_x_axis_density_end])
       #  plt.xlim([2 * 10 ** -2, 1 * 10 ** 4])
         ax2.set_xscale('log')
         ax2.grid(which='major', linestyle='-')
@@ -74,22 +86,48 @@ class AuswertungExtensionMulti():
         ax2.grid(True)
 
         ax2.set_xlabel("Current density [A/cm²]", fontsize=self.fontsize)
-        ax2.set_ylabel("WPE [%]", fontsize=self.fontsize)
-        static_m.scalar_formatter(ax2)
+        ax2.set_ylabel("EQE", fontsize=self.fontsize)
+        #static_m.scalar_formatter(ax2)
 
         color_cnt = 0
 
+
+        max_100um = max(led_lists[0].wpe_array_mean)
+        normalize = (max_100um / 0.121)
+        dens_at_wpe_max = led_lists[0].current_density_array_mean[static_m.find_nearest(led_lists[0].wpe_array_mean, max_100um)]
+
+        print(max(led_lists[0].wpe_array_mean))
+
+        
+        line_list = []
         for led_list in led_lists:
 
             first_led = led_list.leds[0]
-            label = f"{round(led_list.edge_length, 2)}µm {led_list.geometric} R 1:{round(led_list.ratio, 2)} {led_list.color}"
+            size = round(led_list.edge_length, 2)
+            label = f"{size}µm {led_list.geometric} R 1:{round(led_list.ratio, 2)} {led_list.color}"
             color = "green" if first_led.led_no == "unknown" else "black"
             color = "black"
-            ax2.plot(led_list.current_density_array_mean, led_list.wpe_array_mean, color=color, label=label, marker=self.marker_wheel[color_cnt], markersize="8")
+
+            if size == 100:
+                color = "green"
+                line_list.append(label)
+            elif size == 50:
+                color = "blue"
+            elif size == 15:
+                color = "magenta"
+
+
+            ax2.plot(np.asarray(led_list.current_density_array_mean) / dens_at_wpe_max, np.asarray(led_list.wpe_array_mean) / normalize, color=color, label=label, marker=self.marker_wheel[color_cnt], markersize="8")
             color_cnt = color_cnt + 1
 
+        cea_list = []
+        color_cnt = 0
 
-        ax2.set_ylim(bottom=0.5)
+
+        cea_eqe_maxes = []
+
+        #ax2.set_ylim(bottom=0.5)
+        ax2.set_ylim(bottom=0.05)
         plt.legend(loc="upper left")
 
         file2 = file.replace(".csv", "_2.png")
@@ -148,7 +186,8 @@ class AuswertungExtensionMulti():
 
     async def plot_allsizes_wpemax(self, file, title, led_lists):
         fig, ax = plt.subplots(figsize=(24, 16))
-        static_m.format_plot(plt, f"{title} area correction = {round(led_lists[0].area_correction, 2)}µm", ax, self.fontsize)
+        area_correction = " area correction = {round(led_lists[0].area_correction, 2)}µm"
+        static_m.format_plot(plt, f"{title} ", ax, self.fontsize)
        # plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
         ax.set_xscale('log')
        # ax.set_yscale('log')
@@ -159,27 +198,28 @@ class AuswertungExtensionMulti():
         ax.grid(True)
         static_m.scalar_formatter(ax)
 
-        wpe_maxes = []
-        for led_list in led_lists:
-            wpe_maxes.append(max(led_list.wpe_array_mean))
-
         color_cnt = 0
         for led_list in led_lists:
             first_led = led_list.leds[0]
+
+
             label = f"{round(led_list.edge_length, 2)}µm {led_list.geometric} R 1:{round(led_list.ratio, 2)} {led_list.color}"
             dim = [first_led.LED_Dim_x * 10 ** 4]
             rounddim = round(first_led.LED_Dim_x * 10 ** 4)
             max_wpe = [max(led_list.wpe_array_mean)] if rounddim != 5 and rounddim != 50 else led_list.wpe_abs_max
            # print(f"dim {dim} max wpe = {max_wpe}")
 
+
             #ax.plot(x='x', y='y', ax=ax, kind='scatter', label=label)
             #color = "green" if first_led.led_no == "unknown" else "black"
             color = "black"
             ax.plot(dim, max_wpe, color, label = label, markersize=10, marker="o")
             color_cnt = color_cnt + 1
-        ax.set_ylim(bottom=1.0)
-        ax.set_ylim(top=(max(wpe_maxes) + 0.5))
-        ax.set_xlim(left=0.9)
+
+        
+        #ax.set_ylim(bottom=1.0)
+        #ax.set_ylim(top=(max(wpe_maxes) + 0.5))
+        #ax.set_xlim(left=0.9)
        # ax.xaxis.set_major_locator(ticker.LogLocator(subs=range(1,10)))
 
 
@@ -191,6 +231,81 @@ class AuswertungExtensionMulti():
         path = f"{self.filepath}/{file_name}_corr_{led_list.area_correction}.png"
         fig.savefig(path)
         #self.summary_plot_paths.append(f"{path}.png")
+
+    async def plot_allsizes_wpe_wpemax_normalized(self, file, title, led_lists):
+        fig, ax = plt.subplots(figsize=(24, 16))
+        area_correction = " area correction = {round(led_lists[0].area_correction, 2)}µm"
+        static_m.format_plot(plt, f"{title} ", ax, self.fontsize)
+       # plt.xlim([self.limit_x_axis_density_begin, self.limit_x_axis_density_end])
+        ax.set_xscale('log')
+       # ax.set_yscale('log')
+        ax.set_xlabel("size in [µm]", fontsize=self.fontsize)
+        ax.set_ylabel("WPE_max/WPE_max_100um", fontsize=self.fontsize)
+        ax.grid(which='major', linestyle='-')
+        ax.grid(which='minor', linestyle='--')
+        ax.grid(True)
+        static_m.scalar_formatter(ax)
+
+        wpe_maxes = []
+        for led_list in led_lists:
+            wpe_maxes.append(max(led_list.wpe_array_mean))
+
+        color_cnt = 0
+
+        cea_wpe_maxes = [0.12, 0.117, 0.11, 0.104, 0.10]
+        cea_sizes = [100, 50, 20, 15, 10]
+
+        # ax2.scatter(5*10 ** 0 , 0.121, color="green", label="CEA 100µm", marker="x", s=100)
+        # ax2.scatter(8*10 ** 0, 0.117, color="blue", label="CEA 50µm", marker="x", s=100)
+        # ax2.scatter(2*10 ** 1, 0.104, color="magenta", label="CEA 15µm", marker="x", s=100)
+
+        normalized = max(led_lists[0].wpe_array_mean) / 100
+        normalized_cea = cea_wpe_maxes[0] / 100
+
+        dim_array = []
+        max_array = []
+
+        for led_list in led_lists:
+            first_led = led_list.leds[0]
+
+            label = f"{round(led_list.edge_length, 2)}µm {led_list.geometric} R 1:{round(led_list.ratio, 2)} {led_list.color}"
+            dim = [first_led.LED_Dim_x * 10 ** 4]
+            rounddim = round(first_led.LED_Dim_x * 10 ** 4)
+            max_wpe = [max(led_list.wpe_array_mean)] if rounddim != 5 and rounddim != 50 else led_list.wpe_abs_max
+           # print(f"dim {dim} max wpe = {max_wpe}")
+            max_wpe = np.asarray(max_wpe) / normalized
+            #ax.plot(x='x', y='y', ax=ax, kind='scatter', label=label)
+            #color = "green" if first_led.led_no == "unknown" else "black"
+            color = "black"
+            label = "QD"
+            dim_array.append(dim)
+            max_array.append(max_wpe)
+            if color_cnt == 0:
+                label = "QD"
+            else:
+                label = None
+          #  ax.plot(dim, max_wpe, color, label = label,  ,markersize=10, marker="o")
+            ax.plot(dim, max_wpe, color, label = label, color="#f74a50" ,markersize=10, marker="o")
+            color_cnt = color_cnt + 1
+
+        ax.plot(dim_array, max_array, color="#f74a50", label = label,  marker=",")
+        label = "CEA"
+        for i in range(0, len(cea_wpe_maxes)):
+            if i == 0:
+                label = "CEA"
+            else:
+                label = None
+            ax.plot([cea_sizes[i]], [cea_wpe_maxes[i] / normalized_cea], label=label, markersize=8, color="purple", marker="o", zorder=10)
+        ax.plot(cea_sizes, np.asarray(cea_wpe_maxes) / normalized_cea, color="purple", label = label,  marker=",")
+
+        plt.legend(loc="upper left")
+
+        file = file.replace(".csv", ".png")
+        file_name = file.split("/")[-1]
+        path = f"{self.filepath}/{file_name}_corr_{led_list.area_correction}.png"
+        fig.savefig(path)
+        #self.summary_plot_paths.append(f"{path}.png")
+
 
     async def plot_allsizes_iqemax(self, file, title, led_lists):
         fig, ax = plt.subplots(figsize=(24, 16))
