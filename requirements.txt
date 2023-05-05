@@ -1,0 +1,6 @@
+matplotlib
+numpy
+asyncio
+PySimpleGUI
+scipy
+fpdf

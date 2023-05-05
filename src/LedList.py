@@ -13,6 +13,7 @@ class LedList:
         self.area = 0
         self.edge_length = 0
         self.ratio = 1
+        self.ratio_str = "1:1"
         self.color = "blue"
         self.geometric = "square"
 

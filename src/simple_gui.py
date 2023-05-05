@@ -17,6 +17,7 @@ layout = [
      sg.Button("open path dialog", key="button_openfiledialog", size=(size, height))],
     [sg.Check('pixel plot', key='do_pixel_plot', default=False, visible=True), sg.Check('array plot', key='do_array_plot', default=False, visible=True), sg.Check('summary plot', key='do_summary_plot', default=True, visible=True)],
     # [sg.Button("generate", key="button_generate_plots", size=(size, height))],
+    [sg.Check('correction', key='do_correction', default=False, visible=True)],
     [sg.Text('ready', key='info', size=(size,height), background_color="green")]
 ]
 
@@ -39,7 +40,7 @@ async def main_window():
             root.withdraw()
 
             file_path = filedialog.askdirectory()
-            plot_factory = auswertung.Auswertung(file_path, values["do_pixel_plot"], values["do_array_plot"], values["do_summary_plot"], False)
+            plot_factory = auswertung.Auswertung(file_path, values["do_pixel_plot"], values["do_array_plot"], values["do_summary_plot"], values["do_correction"])
             win["info"].Update("processing....")
             await asyncio.sleep(0.1)
             success = await plot_factory.build()

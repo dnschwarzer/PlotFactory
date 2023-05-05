@@ -1,0 +1,62 @@
+{
+	"folders": [
+		{
+			"path": "../../Desktop/nxt"
+		},
+		{
+			"path": "../../Desktop/InformatikOstfalia/Sem 5/Webprogrammierung"
+		},
+		{
+			"path": "../../Desktop/InformatikOstfalia/Sem 5/Autonomes Fahren/determine_direction_sliding_window"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../../Desktop/github/cplusplus"
+		},
+		{
+			"path": "../../Desktop/github/learn-react"
+		},
+		{
+			"path": "../../Desktop/github/web_prog_proj"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"array": "c",
+			"bit": "c",
+			"charconv": "c",
+			"chrono": "c",
+			"compare": "c",
+			"complex": "c",
+			"cstddef": "c",
+			"deque": "c",
+			"format": "c",
+			"functional": "c",
+			"iterator": "c",
+			"limits": "c",
+			"memory": "c",
+			"mutex": "c",
+			"sstream": "c",
+			"system_error": "c",
+			"type_traits": "c",
+			"vector": "c",
+			"xhash": "c",
+			"xiosbase": "c",
+			"xlocbuf": "c",
+			"xlocmon": "c",
+			"xloctime": "c",
+			"xmemory": "c",
+			"xtree": "c",
+			"xutility": "c",
+			"*.inc": "c",
+			"random": "c",
+			"iosfwd": "c",
+			"ostream": "cpp"
+		},
+		"stm32-for-vscode.openOCDPath": false,
+		"stm32-for-vscode.makePath": false,
+		"stm32-for-vscode.armToolchainPath": false
+	}
+}

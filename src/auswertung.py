@@ -67,7 +67,7 @@ class Auswertung:
         subfolders = [f.path for f in os.scandir(syspath) if f.is_dir()]
 
         correction_start = 1 * 10 ** -1
-        correction = 1.5 * 10 ** -1
+        correction = 1.3 * 10 ** -1
         idxs = 0
         for corr in range(0, 1):
             correction += 0.01
@@ -118,6 +118,8 @@ class Auswertung:
                             led_no = int(measure_meta_split[1])
                             led_id = int(measure_meta_split[2].replace("Id", ""))
                             size = measure_meta_split[0].replace("R1", "").replace(" ", "")
+
+                            # die Rechtecke sind: 1:3 - 1x1.73µm², 1:5 - 1x2.24µm², 1:10 - 1x 3.16µm², 1:20 - 1x4.47µm²
                             ratio = float(get_ratio(size))
                             edge_length = np.sqrt(np.sqrt(ratio))
 
@@ -126,6 +128,7 @@ class Auswertung:
                             current_led_list.edge_length = edge_length
                             led_area = current_led_list.edge_length * current_led_list.edge_length
                             current_led_list.ratio = led_area
+                            current_led_list.ratio_str =  f"1:{get_ratio(size)}"
 
                             led = led_properties.LED(led_no, led_area, led_id, date_time)
                             current_led_list.geometric = "rectangle"
@@ -255,9 +258,11 @@ class Auswertung:
 
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
+                await multi.plot_allsizes_wpemax_aspect_ratio(f"{syspath}_wpe_max_aspect_ratio", "wpe max / aspect ratio", self.list_of_measurements)
                 await multi.plot_allsizes_wpe_wpemax_normalized(f"{syspath}_wpe_max_all_sizes_normalized", "wpe max overview", self.list_of_measurements)
                 await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
                 await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
+
 
                 csv_paths = [f'{syspath}/_opt_dens.csv', f'{syspath}/_wpe_dens.csv']
 
