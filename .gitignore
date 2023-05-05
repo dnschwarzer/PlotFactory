@@ -13,6 +13,9 @@ build/
 develop-eggs/
 dist/
 downloads/
+Output/
+pythonProject1.code-workspace
+.gitignore
 eggs/
 .eggs/
 lib/
