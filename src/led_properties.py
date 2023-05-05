@@ -108,7 +108,6 @@ class LED:
         elif last_current_value < self.OpenCircuitLimit:
             self.is_open_circuit = True
             self.is_malfunctioning = True
-            print("OC")
         else:
             self.is_shorted = True
             self.is_malfunctioning = True
@@ -175,7 +174,7 @@ class LED:
         self.eqe_max = max(y_fit)
         self.eqe_fit_coeff = p
 
-        print(f"eqe max :{self.eqe_max }")
+        #print(f"eqe max :{self.eqe_max }")
 
         idx_eqe_max = static_m.find_nearest(y_fit, self.eqe_max)
         self.i_at_eqe_max = x_fine[idx_eqe_max]

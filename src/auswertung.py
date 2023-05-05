@@ -10,7 +10,20 @@ from _auswertung_multi import AuswertungExtensionMulti as Multi
 import math
 import auswertung_helper as static_m
 import matplotlib.pyplot as plt
+import warnings
 
+
+debug_mode = False
+
+if not debug_mode:
+    warnings.filterwarnings('ignore')
+
+def print_debug(text):
+    pass
+
+if debug_mode:
+    def print_debug(text):
+        print(text)    
 
 
 def format_e(n):
@@ -222,6 +235,18 @@ class Auswertung:
                 self.limit_x_axis_density_begin = current_led_list.current_density_array_mean[op_idx+1]
 
                 self.list_of_measurements.append(current_led_list)
+                print(f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} {current_led_list.geometric} R 1_{current_led_list.ratio} {len(current_led_list.leds)} LEDs processed: ")
+                print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
+                # print summary of malfunctions in current_led_list
+                malfuncs = 0
+                for led in current_led_list.leds:
+                    if led.is_malfunctioning:
+                        malfuncs = malfuncs + 1
+                print(f"{malfuncs} out of LED {len(current_led_list.leds)} are malfunctioning / not counted")
+                print("")
+
+
+
                 if self.do_array_plot:
                     # outsourcing extension methods
                     single = Single(current_led_list, folder, self.limit_x_axis_density_begin, self.limit_x_axis_density_end, self.limit_x_axis_voltage_begin, self.limit_x_axis_voltage_end, self.summary_plot_paths)
@@ -245,6 +270,7 @@ class Auswertung:
                     # create csv
                     csv_path = f'{folder}/{self.output_dir}/_output.csv'
                     current_led_list.create_csv(csv_path)
+                    
 
 
             # all measurements

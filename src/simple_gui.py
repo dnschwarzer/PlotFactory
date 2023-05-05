@@ -12,7 +12,7 @@ height = 1
 file_path = ""
 
 layout = [
-    [sg.Text('select parent folder', size=(size + 10,height), background_color="blue")],
+    [sg.Text('select root folder', size=(size + 10,height), background_color="blue")],
     [sg.Text('selected path:', size=(size,height)), sg.InputText(pathlib.Path().resolve(), key="csv_root_filepath", size=(size + 50, height)),
      sg.Button("open path dialog", key="button_openfiledialog", size=(size, height))],
     [sg.Check('pixel plot', key='do_pixel_plot', default=False, visible=True), sg.Check('array plot', key='do_array_plot', default=False, visible=True), sg.Check('summary plot', key='do_summary_plot', default=True, visible=True)],
