@@ -25,6 +25,18 @@ if debug_mode:
     def print_debug(text):
         print(text)    
 
+def print_summary(current_led_list):
+    print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} µm² {current_led_list.geometric} R 1_{current_led_list.ratio}  {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
+    print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
+    # print summary of malfunctions in current_led_list
+    malfuncs = 0
+    for led in current_led_list.leds:
+        if led.is_malfunctioning:
+            malfuncs = malfuncs + 1
+    print(f"{malfuncs} out of LED {len(current_led_list.leds)} are malfunctioning / not counted")
+    print(f"most commong datapoint length: {current_led_list.max_data_points} per LED")
+    print("")
+
 
 def format_e(n):
     a = '%E' % n
@@ -160,7 +172,6 @@ class Auswertung:
                             current_density_li = []
                             reader = csv.reader(f, delimiter=";")
                             cnt = 0
-                           # print(correction_ratio)
                             for row in reader:
                                 if len(row) != 5:
                                     continue
@@ -192,7 +203,6 @@ class Auswertung:
                                 op_power_li.append(opt_power)
                                 current_density_li.append(current_density)
 
-                        #print(f"datapoint cnt: {len(i_soll_li)} at LED: {led.led_no}")
                         if len(i_soll_li) <= self.minimum_datapoints:
                             continue
 
@@ -212,6 +222,7 @@ class Auswertung:
                             self.single_plot_paths.clear()
 
                 if len(current_led_list.leds) == 0:
+                    print('\033[91m' + 'no well formatted files found!' + '\033[0m')
                     return "no well formatted files found"
 
                 first_led = current_led_list.leds[0]
@@ -231,17 +242,10 @@ class Auswertung:
 
                 self.list_of_measurements.append(current_led_list)
 
+                # print summary to console
+                print_summary(current_led_list)
 
-                print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} {current_led_list.geometric} R 1_{current_led_list.ratio}  {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
-                print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
-                # print summary of malfunctions in current_led_list
-                malfuncs = 0
-                for led in current_led_list.leds:
-                    if led.is_malfunctioning:
-                        malfuncs = malfuncs + 1
-                print(f"{malfuncs} out of LED {len(current_led_list.leds)} are malfunctioning / not counted")
-                print(f"most commong datapoint length: {current_led_list.max_data_points} per LED")
-                print("")
+                
 
 
 
