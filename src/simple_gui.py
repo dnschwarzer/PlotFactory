@@ -45,7 +45,9 @@ async def main_window():
             await asyncio.sleep(0.1)
             success = await plot_factory.build()
             win["info"].Update("done")
+            print('\033[91m' + 'work done. closing...' + '\033[0m')
             sg.Popup(success)
+
             sys.exit(1)
             window.close()
             #win["csv_root_filepath"].Update(file_path)

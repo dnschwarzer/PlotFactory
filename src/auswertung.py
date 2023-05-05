@@ -168,22 +168,17 @@ class Auswertung:
                                 try:
                                     u_mess = float(row[0]) * float(correction_ratio)
                                     u_korr = float(row[1]) * float(correction_ratio)
-                                    #print(f"row=({row[2]}) correction=({correction_ratio})  {led.to_string()} row=({cnt})")
                                     i_soll = float(row[2]) * float(correction_ratio)
                                     opt_power = float(row[3])
                                 except ValueError:
                                     led.is_malfunctioning = True
                                     continue
 
-                                #current_density = float(row[4]) * (4.0/np.pi)
-                                # falsche flächenannahme
-                               # current_density = float(row[4]) if date == "10-02-2023" else float(row[4]) * (4.0/np.pi)
                                 current_density = i_soll / (led_area * 10 ** -8)
 
                                 # filter opt_power noise
                                 # if(opt_power > 7*10E-10;100*opt_power/(volt*current);0)
                                 if opt_power < 3*10**-8 or cnt < 10:
-                                    # opt_power = 100 * opt_power/(u_korr * i_mess)
                                     opt_power = 0
                                 else:
                                     opt_power = opt_power
@@ -235,7 +230,9 @@ class Auswertung:
                 self.limit_x_axis_density_begin = current_led_list.current_density_array_mean[op_idx+1]
 
                 self.list_of_measurements.append(current_led_list)
-                print(f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} {current_led_list.geometric} R 1_{current_led_list.ratio} {len(current_led_list.leds)} LEDs processed: ")
+
+
+                print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} {current_led_list.geometric} R 1_{current_led_list.ratio}  {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
                 print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
                 # print summary of malfunctions in current_led_list
                 malfuncs = 0
@@ -243,6 +240,7 @@ class Auswertung:
                     if led.is_malfunctioning:
                         malfuncs = malfuncs + 1
                 print(f"{malfuncs} out of LED {len(current_led_list.leds)} are malfunctioning / not counted")
+                print(f"most commong datapoint length: {current_led_list.max_data_points} per LED")
                 print("")
 
 

@@ -98,7 +98,7 @@ class AuswertungExtensionMulti():
         normalize = (max_100um / 0.121)
         dens_at_wpe_max = led_lists[0].current_density_array_mean[static_m.find_nearest(led_lists[0].wpe_array_mean, max_100um)]
 
-        print(max(led_lists[0].wpe_array_mean))
+        #print_debug(max(led_lists[0].wpe_array_mean))
 
         
         line_list = []
