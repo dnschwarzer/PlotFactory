@@ -269,14 +269,22 @@ class AuswertungExtensionMulti():
             y = []
             i = 0
             for group in groups:
-                ratio = aspects[i] 
+                #ratio = aspects[i] 
+                ratio = 1/group.ratio
                 x.append(ratio)
                 i = i + 1
-                wpe_max = max(group.wpe_array_mean)
+                wpe_max = group.wpe_mean_max
                 y.append(wpe_max) 
                 wpe_maxes.append(wpe_max)
 
-            ax.plot(x, y, label = f"({int(groups[0].edge_length)})² µm²", markersize=10, marker="o")
+            paired_values = list(zip(x, y))
+
+            # Sort the paired values based on the x-axis values
+            sorted_values = sorted(paired_values, key=lambda x: x[0])
+
+            # Unpack the sorted pairs into separate lists
+            sorted_x_axis, sorted_y_axis = zip(*sorted_values)
+            ax.plot(sorted_x_axis, sorted_y_axis, label = f"({int(groups[0].edge_length)})² µm²", markersize=10, marker="o")
 
         plt.gca().invert_xaxis()       
         ax.set_ylim(bottom=1.5)
