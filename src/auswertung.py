@@ -26,7 +26,7 @@ if debug_mode:
         print(text)    
 
 def print_summary(current_led_list):
-    print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} µm² {current_led_list.geometric} R 1_{current_led_list.ratio} {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
+    print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} µm² {current_led_list.geometric} R 1_{current_led_list.ratio_str} {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
     print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
     # print summary of malfunctions in current_led_list
     malfuncs = 0
@@ -171,8 +171,8 @@ class Auswertung:
                             edge_length = float(edge_length) - float(correction)
                             current_led_list.edge_length = edge_length
                             led_area = current_led_list.edge_length * current_led_list.edge_length
-                            current_led_list.ratio = led_area
-                            current_led_list.ratio_str =  f"1:{get_ratio(size)}"
+                            current_led_list.ratio = ratio
+                            current_led_list.ratio_str =  f"1:{int(ratio)}"
 
                             pixel_size_x = round(np.sqrt(1/ratio)*edge_length, 2)
                             pixel_size_y = round(pixel_size_x * ratio, 2)
