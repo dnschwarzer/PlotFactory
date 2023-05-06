@@ -26,14 +26,14 @@ if debug_mode:
         print(text)    
 
 def print_summary(current_led_list):
-    print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} µm² {current_led_list.geometric} R 1_{current_led_list.ratio}  {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
+    print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} µm² {current_led_list.geometric} R 1_{current_led_list.ratio} {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
     print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
     # print summary of malfunctions in current_led_list
     malfuncs = 0
     for led in current_led_list.leds:
         if led.is_malfunctioning:
             malfuncs = malfuncs + 1
-    print(f"{malfuncs} out of LED {len(current_led_list.leds)} are malfunctioning / not counted")
+    print(f"{malfuncs} out of {len(current_led_list.leds)} LEDs are malfunctioning / not counted")
     print(f"most commong datapoint length: {current_led_list.max_data_points} per LED")
     print("")
 
@@ -118,18 +118,18 @@ class Auswertung:
 
                         date_time = file_name_split[0].replace("_", "-")
                         date = file_name_split[0].split("__")[0].replace("_", "-")
-                        measure_meta = file_name_split[1]
+                        measure_meta = file_name_split[1].lower()
 
                         # assignments
                         measure_meta_split = measure_meta.split("_")
                         correction_ratio = 1.0
 
                         if len(measure_meta_split) == 3:
-                            led_no = (measure_meta_split[0].replace("Q", ""))
+                            led_no = (measure_meta_split[0].replace("q", ""))
                             current_led_list.color = "green" if led_no == "unknown" else "blue"
 
-                            led_id = int(measure_meta_split[1].replace("Id", ""))
-                            edge_length = float(measure_meta_split[2].replace("D", ""))
+                            led_id = int(measure_meta_split[1].replace("id", ""))
+                            edge_length = float(measure_meta_split[2].replace("d", ""))
                             correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
                             edge_length = float(edge_length) - float(correction)
 
@@ -141,13 +141,32 @@ class Auswertung:
 
                         elif len(measure_meta_split) == 4:
                             led_no = int(measure_meta_split[1])
-                            led_id = int(measure_meta_split[2].replace("Id", ""))
-                            size = measure_meta_split[0].replace("R1", "").replace(" ", "")
+                            led_id = int(measure_meta_split[2].replace("id", ""))
+
+                            has_aspect_ratio = True if measure_meta_split[0].find("r") != -1 else False
+                            ratio = float(1)
 
                             # die Rechtecke sind: 1:3 - 1x1.73µm², 1:5 - 1x2.24µm², 1:10 - 1x 3.16µm², 1:20 - 1x4.47µm²
-                            ratio = float(get_ratio(size))
-                            edge_length = np.sqrt(np.sqrt(ratio))
+                            if has_aspect_ratio:
+                                size = measure_meta_split[0].replace("r1", "").replace(" ", "")
+                                ratio = float(size)
+                                current_led_list.geometric = "rectangle"
+                            else:
+                                geometry = measure_meta_split[0]
+                                if geometry.find("q") != -1:
+                                    size = measure_meta_split[0].replace("q", "").replace(" ", "")
+                                    current_led_list.geometric = "quadrat"
+                                elif geometry.find("d") != -1:
+                                    size = measure_meta_split[0].replace("d", "").replace(" ", "")
+                                    current_led_list.geometric = "diamond"
+                                elif geometry.find("c") != -1:
+                                    size = measure_meta_split[0].replace("c", "").replace(" ", "")
+                                    current_led_list.geometric = "circle"
+                                elif geometry.find("e") != -1:
+                                    size = measure_meta_split[0].replace("e", "").replace(" ", "")
+                                    current_led_list.geometric = "ellipse"  
 
+                            edge_length = float(measure_meta_split[3].replace("d", ""))
                             correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
                             edge_length = float(edge_length) - float(correction)
                             current_led_list.edge_length = edge_length
@@ -155,8 +174,13 @@ class Auswertung:
                             current_led_list.ratio = led_area
                             current_led_list.ratio_str =  f"1:{get_ratio(size)}"
 
+                            pixel_size_x = round(np.sqrt(1/ratio)*edge_length, 2)
+                            pixel_size_y = round(pixel_size_x * ratio, 2)
+
+                            if pixel_size_x <= 1 or pixel_size_y <= 1:
+                                print("SMOOOOOOOL")
+
                             led = led_properties.LED(led_no, led_area, led_id, date_time)
-                            current_led_list.geometric = "rectangle"
                         else:
                             continue
 
@@ -287,9 +311,9 @@ class Auswertung:
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
                 await multi.plot_allsizes_wpemax_aspect_ratio(f"{syspath}_wpe_max_aspect_ratio", "wpe max / aspect ratio", self.list_of_measurements)
-                await multi.plot_allsizes_wpe_wpemax_normalized(f"{syspath}_wpe_max_all_sizes_normalized", "wpe max overview", self.list_of_measurements)
-                await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
-                await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
+                # await multi.plot_allsizes_wpe_wpemax_normalized(f"{syspath}_wpe_max_all_sizes_normalized", "wpe max overview", self.list_of_measurements)
+                # await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
+                # await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
 
 
                 csv_paths = [f'{syspath}/_opt_dens.csv', f'{syspath}/_wpe_dens.csv']

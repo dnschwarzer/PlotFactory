@@ -48,7 +48,7 @@ async def main_window():
             print('\033[91m' + 'work done. closing...' + '\033[0m')
             sg.Popup(success)
 
-            sys.exit(1)
+            sys.exit(0)
             window.close()
             #win["csv_root_filepath"].Update(file_path)
 

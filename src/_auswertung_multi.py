@@ -66,7 +66,8 @@ class AuswertungExtensionMulti():
             label = f"{round(led_list.edge_length, 2)}µm {led_list.geometric} R 1:{round(led_list.ratio, 2)} {led_list.color}"
             color = "black"
             ax.plot(led_list.current_density_array_mean, led_list.op_power_array_mean, color=color, label = label, marker=self.marker_wheel[color_cnt], markersize="8")
-            color_cnt = color_cnt + 1
+            
+            color_cnt = color_cnt + 1 if color_cnt < len(self.marker_wheel) - 2 else 0
 
         plt.legend(loc="upper left")
         static_m.format_plot(plt, title, ax, self.fontsize)
@@ -260,8 +261,8 @@ class AuswertungExtensionMulti():
 
         wpe_maxes = []
 
-        aspects = [ 1/1, 1/3, 1/5, 1/10]
-        aspect_ticks = [ 1/1, 1/2, 1/3, 1/4, 1/5, 1/6, 1/7, 1/8, 1/9, 1/10]
+        aspects = [ 1/1, 1/3, 1/5, 1/10, 1/20]
+        aspect_ticks = [ 1/1, 1/2, 1/3, 1/4, 1/5, 1/6, 1/7, 1/8, 1/9, 1/10, 1/18 , 1/20]
 
         for groups in led_groups:
             x = []
@@ -275,59 +276,13 @@ class AuswertungExtensionMulti():
                 y.append(wpe_max) 
                 wpe_maxes.append(wpe_max)
 
-            ax.plot(x, y, label = f"{int(groups[0].edge_length)} µm²", markersize=10, marker="o")
+            ax.plot(x, y, label = f"({int(groups[0].edge_length)})² µm²", markersize=10, marker="o")
 
-        plt.gca().invert_xaxis()
-
-
-        # wpe_maxes = []
-        # aspects = []
-        # color_cnt = 0
-        # for led_list in led_lists:
-        #     first_led = led_list.leds[0]
-
-
-        #     label = f"{round(led_list.edge_length, 2)}µm {led_list.geometric} R {led_list.ratio_str} {led_list.color}"
-        #     dim = [first_led.LED_Dim_x * 10 ** 4]
-        #     rounddim = round(first_led.LED_Dim_x * 10 ** 4)
-        #     max_wpe = [max(led_list.wpe_array_mean)]
-        #    # print(f"dim {dim} max wpe = {max_wpe}")
-
-
-        #     #ax.plot(x='x', y='y', ax=ax, kind='scatter', label=label)
-        #     #color = "green" if first_led.led_no == "unknown" else "black"
-        #     color = "black"
-        #     aspect = 1 / float(f"{led_list.ratio_str}".split(":")[1])
-        #     aspects.append(aspect)
-
-        #     ax.plot([1 / float(f"{led_list.ratio_str}".split(":")[1])], max_wpe, self.color_wheel[color_cnt], label = label, markersize=10, marker="o")
-        #     wpe_maxes.append(max_wpe[0])
-        #     color_cnt = color_cnt + 1
-
-        # #ax.plot(aspects, wpe_maxes, "black", label = "1 µm²", markersize=10, marker=",")
-
-
-
-        
-        ax.set_ylim(bottom=1.0)
-
+        plt.gca().invert_xaxis()       
+        ax.set_ylim(bottom=1.5)
         ax.set_ylim(top=(max(wpe_maxes) + 0.5))
-        #ax.set_xlim(left=0.9)
-       # ax.xaxis.set_major_locator(ticker.LogLocator(subs=range(1,10)))
-
-
         plt.legend(loc="upper right")
 
-        # labels = [item.get_text() for item in ax.get_xticklabels()]
-
-        # new_labels = []
-        # for label in labels:
-        #     if float(label) == 0.0:
-        #         new_labels.append("0")
-        #     else:  
-        #         new_label = f"1:{(round(1.0/float(label), 2))}"
-        #         new_labels.append(new_label)    
-        
         ax.set_xscale('log')
         asp_l = []
         for aspect in aspect_ticks:
