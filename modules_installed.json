@@ -1,0 +1,10 @@
+{
+    "modules": [
+        "matplotlib",
+        "fpdf",
+        "scipy",
+        "PySimpleGUI",
+        "numpy",
+        "asyncio"
+    ]
+}

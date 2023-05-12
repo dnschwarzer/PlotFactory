@@ -1,6 +1,7 @@
 import os
 import csv
 import numpy as np
+import matplotlib.ticker as ticker
 
 
 def format_plot(plt, title, ax, fontsize):
@@ -24,6 +25,16 @@ def find_nearest(array, value):
     return idx
 
 
+def custom_formatter(x, pos):
+    decimal_places = abs(int(np.floor(np.log10(abs(x))))) if abs(x) > 0 else 0
+    format_string = "{:." + str(decimal_places) + "f}"
+    formatted = format_string.format(x)
+    # remove trailing zeros and decimal point if not necessary
+    formatted = formatted.rstrip('0').rstrip('.') if '.' in formatted else formatted
+    return formatted
+
+
 def scalar_formatter(ax):
-    from matplotlib.ticker import ScalarFormatter
-    ax.xaxis.set_major_formatter(ScalarFormatter())
+    from matplotlib.ticker import FuncFormatter
+    ax.xaxis.set_major_formatter(FuncFormatter(custom_formatter))
+

@@ -149,7 +149,7 @@ class Auswertung:
                             # die Rechtecke sind: 1:3 - 1x1.73µm², 1:5 - 1x2.24µm², 1:10 - 1x 3.16µm², 1:20 - 1x4.47µm²
                             if has_aspect_ratio:
                                 size = measure_meta_split[0].replace("r1", "").replace(" ", "")
-                                ratio = float(size)
+                                ratio = float(size) if int(measure_meta_split[3].replace("d", "")) != 1 else float(get_ratio(size))
                                 current_led_list.geometric = "rectangle"
                             else:
                                 geometry = measure_meta_split[0]
@@ -170,15 +170,12 @@ class Auswertung:
                             correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
                             edge_length = float(edge_length) - float(correction)
                             current_led_list.edge_length = edge_length
-                            led_area = current_led_list.edge_length * current_led_list.edge_length
                             current_led_list.ratio = ratio
                             current_led_list.ratio_str =  f"1:{int(ratio)}"
-
-                            pixel_size_x = round(np.sqrt(1/ratio)*edge_length, 2)
-                            pixel_size_y = round(pixel_size_x * ratio, 2)
-
-                            if pixel_size_x <= 1 or pixel_size_y <= 1:
-                                print("SMOOOOOOOL")
+                            pixel_size_x = np.sqrt(1/ratio)*edge_length
+                            pixel_size_x = 1 if pixel_size_x < 1 else pixel_size_x
+                            pixel_size_y = edge_length * np.sqrt(ratio)
+                            led_area = round(pixel_size_x * pixel_size_y)
 
                             led = led_properties.LED(led_no, led_area, led_id, date_time)
                         else:
@@ -310,10 +307,11 @@ class Auswertung:
 
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
                 await multi.plot_allsizes_wpemax(f"{syspath}_wpe_max_all_sizes", "wpe max overview", self.list_of_measurements)
+                await multi.plot_save_wpe_dens(f"{syspath}_wpe_dens_optp_all_sizes", "wpe all sizes", self.list_of_measurements)
                 await multi.plot_allsizes_wpemax_aspect_ratio(f"{syspath}_wpe_max_aspect_ratio", "wpe max / aspect ratio", self.list_of_measurements)
-                # await multi.plot_allsizes_wpe_wpemax_normalized(f"{syspath}_wpe_max_all_sizes_normalized", "wpe max overview", self.list_of_measurements)
-                # await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
-                # await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
+                #await multi.plot_allsizes_wpe_wpemax_normalized(f"{syspath}_wpe_max_all_sizes_normalized", "wpe max overview", self.list_of_measurements)
+                #await multi.plot_save_c_avg(f"{syspath}_wpe_overview", "overview", self.list_of_measurements)
+                await multi.plot_allsizes_iqemax(f"{syspath}_iqe_overview", "overview", self.list_of_measurements)
 
 
                 csv_paths = [f'{syspath}/_opt_dens.csv', f'{syspath}/_wpe_dens.csv']
