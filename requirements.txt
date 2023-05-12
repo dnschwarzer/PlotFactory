@@ -3,4 +3,4 @@ numpy
 asyncio
 PySimpleGUI
 scipy
-fpdf
+fpdf2==2.6.0
