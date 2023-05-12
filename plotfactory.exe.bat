@@ -26,3 +26,7 @@ if %MODULES_INSTALLED%==false (
 
 REM Execute the src/main.py script
 %PYTHON% src/main.py
+if %errorlevel% neq 0 (
+    echo An error occurred. Press any key to exit...
+    pause > nul
+)

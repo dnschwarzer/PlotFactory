@@ -17,7 +17,7 @@ class PDF(FPDF):
 
     def header(self):
         # Logo
-        logo_path = f"{pathlib.Path().resolve()}/res/Rastergrafik.ico"
+      #  logo_path = f"{pathlib.Path().resolve()}/res/Rastergrafik.ico"
 
         # Arial bold 15
         self.set_font('Arial', 'B', 15)
@@ -26,7 +26,7 @@ class PDF(FPDF):
         self.cell(0, 10, self.title, 0, 1, align='C')
         self.ln()
 
-        self.image(logo_path, 10, 8, 33)
+       # self.image(logo_path, 10, 8, 33)
 
        # self.cell(h=10, txt=self.title, border=1, align='C')
         # Line break
