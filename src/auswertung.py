@@ -25,6 +25,12 @@ if debug_mode:
     def print_debug(text):
         print(text)    
 
+def print_red(text):
+    print('\033[91m' + text + '\033[0m')
+
+def print_green(text):
+    print('\033[92m' + text + '\033[0m')
+
 def print_summary(current_led_list):
     print('\033[92m' + f"{current_led_list.leds[0].LED_Dim_x * 10 ** 4} µm² {current_led_list.geometric} R 1_{current_led_list.ratio_str} {len(current_led_list.leds)} LEDs processed: " + '\033[0m')
     print(f"wpe max of mean: {current_led_list.wpe_mean_max} j at wpe max: {max(current_led_list.j_at_wpe_max)}")
@@ -125,11 +131,30 @@ class Auswertung:
                         correction_ratio = 1.0
 
                         if len(measure_meta_split) == 3:
-                            led_no = (measure_meta_split[0].replace("q", ""))
-                            current_led_list.color = "green" if led_no == "unknown" else "blue"
+                            try:
+                                geometry = measure_meta_split[0]
+                                if geometry.find("q") != -1:
+                                    led_no = measure_meta_split[0].replace("q", "").replace(" ", "")
+                                    current_led_list.geometric = "quadrat"
+                                elif geometry.find("d") != -1:
+                                    led_no = measure_meta_split[0].replace("d", "").replace(" ", "")
+                                    current_led_list.geometric = "diamond"
+                                elif geometry.find("c") != -1:
+                                    led_no = measure_meta_split[0].replace("c", "").replace(" ", "")
+                                    current_led_list.geometric = "circle"
+                                elif geometry.find("e") != -1:
+                                    led_no = measure_meta_split[0].replace("e", "").replace(" ", "")
+                                    current_led_list.geometric = "ellipse" 
+                                led_no = int(led_no)
+                                current_led_list.color = "green" if led_no == "unknown" else "blue"
 
-                            led_id = int(measure_meta_split[1].replace("id", ""))
-                            edge_length = float(measure_meta_split[2].replace("d", ""))
+                                led_id = int(measure_meta_split[1].replace("id", ""))
+                                edge_length = float(measure_meta_split[2].replace("d", ""))
+                            except ValueError:
+                                print_red(f"Datei falsch benannt/formatiert: {file_name}")
+                                continue
+
+                        
                             correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
                             edge_length = float(edge_length) - float(correction)
 
@@ -140,33 +165,39 @@ class Auswertung:
 
 
                         elif len(measure_meta_split) == 4:
-                            led_no = int(measure_meta_split[1])
-                            led_id = int(measure_meta_split[2].replace("id", ""))
+                            try:
+                                led_no = int(measure_meta_split[1])
+                                led_id = int(measure_meta_split[2].replace("id", ""))
 
-                            has_aspect_ratio = True if measure_meta_split[0].find("r") != -1 else False
-                            ratio = float(1)
+                                has_aspect_ratio = True if measure_meta_split[0].find("r") != -1 else False
+                                ratio = float(1)
 
-                            # die Rechtecke sind: 1:3 - 1x1.73µm², 1:5 - 1x2.24µm², 1:10 - 1x 3.16µm², 1:20 - 1x4.47µm²
-                            if has_aspect_ratio:
-                                size = measure_meta_split[0].replace("r1", "").replace(" ", "")
-                                ratio = float(size) if int(measure_meta_split[3].replace("d", "")) != 1 else float(get_ratio(size))
-                                current_led_list.geometric = "rectangle"
-                            else:
-                                geometry = measure_meta_split[0]
-                                if geometry.find("q") != -1:
-                                    size = measure_meta_split[0].replace("q", "").replace(" ", "")
-                                    current_led_list.geometric = "quadrat"
-                                elif geometry.find("d") != -1:
-                                    size = measure_meta_split[0].replace("d", "").replace(" ", "")
-                                    current_led_list.geometric = "diamond"
-                                elif geometry.find("c") != -1:
-                                    size = measure_meta_split[0].replace("c", "").replace(" ", "")
-                                    current_led_list.geometric = "circle"
-                                elif geometry.find("e") != -1:
-                                    size = measure_meta_split[0].replace("e", "").replace(" ", "")
-                                    current_led_list.geometric = "ellipse"  
+                                # die Rechtecke sind: 1:3 - 1x1.73µm², 1:5 - 1x2.24µm², 1:10 - 1x 3.16µm², 1:20 - 1x4.47µm²
+                                if has_aspect_ratio:
+                                    size = measure_meta_split[0].replace("r1", "").replace(" ", "")
+                                    ratio = float(size) if int(measure_meta_split[3].replace("d", "")) != 1 else float(get_ratio(size))
+                                    current_led_list.geometric = "rectangle"
+                                else:
+                                    geometry = measure_meta_split[0]
+                                    if geometry.find("q") != -1:
+                                        size = measure_meta_split[0].replace("q", "").replace(" ", "")
+                                        current_led_list.geometric = "quadrat"
+                                    elif geometry.find("d") != -1:
+                                        size = measure_meta_split[0].replace("d", "").replace(" ", "")
+                                        current_led_list.geometric = "diamond"
+                                    elif geometry.find("c") != -1:
+                                        size = measure_meta_split[0].replace("c", "").replace(" ", "")
+                                        current_led_list.geometric = "circle"
+                                    elif geometry.find("e") != -1:
+                                        size = measure_meta_split[0].replace("e", "").replace(" ", "")
+                                        current_led_list.geometric = "ellipse"  
 
-                            edge_length = float(measure_meta_split[3].replace("d", ""))
+                                edge_length = float(measure_meta_split[3].replace("d", ""))
+
+                            except ValueError:
+                                print_red(f"Datei falsch benannt/formatiert: {file_name}")
+                                continue
+
                             correction_ratio = (float(edge_length) - float(correction)) / float(edge_length)
                             edge_length = float(edge_length) - float(correction)
                             current_led_list.edge_length = edge_length
