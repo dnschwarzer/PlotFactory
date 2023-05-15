@@ -58,4 +58,4 @@ async def main_window():
         await asyncio.sleep(0.1)
 
     window.close()
-    sys.exit(1)
+    sys.exit(0)
